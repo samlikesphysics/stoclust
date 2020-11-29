@@ -26,6 +26,7 @@ baseurl: "/stoclust" # the subpath of your site, e.g. /blog
 url: "http://samlikesphysics.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  samlikesphysics
 github: [metadata]
+logo: "/assets/img/stoclust.png"
 
 # Build settings
 theme: jekyll-theme-minimal
