@@ -23,7 +23,7 @@ email: samlikesphysics@gmail.com
 description: >- # this means to ignore newlines until "baseurl:"
   Modular clustering algorithms using stochastic analysis and ensemble techniques.
 baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
+url: "http://samlikesphysics.github.io/stoclust" # the base hostname & protocol for your site, e.g. http://example.com
 github_username:  samlikesphysics
 github: [metadata]
 
