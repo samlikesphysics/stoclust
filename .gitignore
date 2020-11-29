@@ -1,0 +1,5 @@
+build/
+dist/
+stoclust/test/
+stoclust/__pycache__/
+stoclust.egg-info/
