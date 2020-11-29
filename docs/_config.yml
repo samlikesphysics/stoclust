@@ -28,7 +28,7 @@ github_username:  samlikesphysics
 github: [metadata]
 
 # Build settings
-theme: minima
+theme: jekyll-theme-leap-day
 plugins:
   - jekyll-feed
 
