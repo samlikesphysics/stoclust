@@ -2,34 +2,35 @@ import numpy as np
 import scipy.linalg as la
 from functools import reduce
 
-def subspace(T,eig_thresh=0.8,num_samples=10000):
-    """
-    Takes a Markov matrix T and an eigenvalue threshold,
-    and returns the basis and dual vectors of items within that 
-    high-eigenvalue subspace.
-    """
-    num_items = T.shape[0]
-    vals, vl, vr = la.eig(T,left=True)
-    sort = np.flip(np.argsort(vals))
-    vecsl = vl[:,sort].astype(float)
-    vecsr = (vr[:,sort].astype(float)).T
-    d = np.amax(np.where(np.abs(vals[sort])>eig_thresh))
-    basis = vecsl[:,0:d+1]
-    dual = vecsr[0:d+1,:]
-    return basis, dual
+"""
+stoclust.utils
 
-def projector(basis,dual):
-    """
-    Delives the projector corresponding to a given basis and dual.
-    """
-    inners = dual@dual.T
-    pi = basis@inners@basis.T
-    return pi
+Contains miscellaneous useful functions.
+
+Functions
+---------
+stoch(weights,axis=-1):
+
+    Reweights each row along a given axis 
+    such that sums along that axis are one.
+
+sinkhorn_knopp(mat,num_iter=100,rescalings=False):
+
+    Given a matrix of weights, generates a bistochastic matrix 
+    using the Sinkhorn-Knopp algorithm.
+
+block_sum(a, blocks, axis=0):
+
+    Given an array and a list of index blocks
+    along a given axis, delivers a new array whose indices
+    correspond to blocks and whose
+    entries are sums over the old values.
+    
+"""
 
 def stoch(weights,axis=-1):
     """
-    Returns an array M normalized so that np.sum(M,axis=axis) is
-    an array of all ones.
+    Reweights each row along a given axis such that sums along that axis are one.
     """
     if isinstance(axis,tuple):
         axes = list(axis)
@@ -49,14 +50,21 @@ def stoch(weights,axis=-1):
                                                             +list(shape[(other_axes)]))
     return np.moveaxis(new_weights/sums_full,all_axes,reorg)
 
-def sinkhorn_knopp(mat,num_iter=100,rescalings=True):
+def sinkhorn_knopp(mat,num_iter=100,rescalings=False):
     """
-    A bistochastic matrix is one for which 
-    np.sum(M,axis=0)=1 and np.sum(M,axis=1)=1.
-    For every positive-definite matrix M, there are unique
-    arrays dL and dR such that B = np.diag(dL)@M@np.diag(dR)
-    is bistochastic, which can be found using the Sinkhorn-Knopp
-    algorithm. This method returns B and, optionally, dL and dR.
+    Given a matrix of weights, generates a bistochastic matrix using the Sinkhorn-Knopp algorithm.
+
+    A bistochastic matrix is one where the sum of rows
+    is always equal to one, and the sum of columns is always
+    equal to one.
+    
+    For any matrix M, there is a unique pair of
+    diagonal matrices D_L and D_R such that
+    D_L^(-1) M D_R^(-1) is bistochastic. The
+    Sinkhorn-Knopp algorithm determines these matrices
+    iteratively. This function will return the resulting
+    bistochastic matrix and, optionally, the diagonal weights
+    of the rescaling matrices.
     """
     dR = np.ones([mat.shape[1]])
     dL = np.ones([mat.shape[0]])
@@ -68,23 +76,11 @@ def sinkhorn_knopp(mat,num_iter=100,rescalings=True):
     else:
         return np.diag(dL)@mat@np.diag(dR)
 
-def is_canopy(k,C_less_than):
-    """
-    A check used by the Hierarchy class to determine whether
-    a given cluster index is a top-level cluster among
-    a given subset of clusters.
-    """
-    is_cpy = True
-    for j in C_less_than:
-        if (len(C_less_than[j])>1) and (k in C_less_than[j]):
-            is_cpy = False
-    return is_cpy
-
 def block_sum(a, blocks, axis=0):
     """
-    Given an array and an aggregation of its indices
+    Given an array and a list of index blocks
     along a given axis, delivers a new array whose indices
-    correspond to clusters of the old indices and whose
+    correspond to blocks and whose
     entries are sums over the old values.
     """
     if axis==0:

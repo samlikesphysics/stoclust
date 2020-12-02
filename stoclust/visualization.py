@@ -1,80 +1,401 @@
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+from stoclust.Aggregation import Aggregation
+from stoclust.Group import Group
+from tqdm import tqdm
 
-def heatmap(mat,**kwargs):
-    which_x = kwargs.get('show_x',np.arange(mat.shape[1]))
-    which_y = kwargs.get('show_y',np.arange(mat.shape[0]))
-    xlabels = kwargs.get('xlabels',np.arange(mat.shape[1]))
-    ylabels = kwargs.get('ylabels',np.arange(mat.shape[0]))
-    colorscale = kwargs.get('colorscale',px.colors.sequential.Viridis)
-    zmid = kwargs.get('zmid',None)
+"""
+stoclust.visualization
+
+Contains functions for visualizing data and clusters.
+
+Functions
+---------
+heatmap(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwargs):
+
+    Generates a heatmap of a given matrix: 
+    that is, displays the matrix as a table of colored blocks 
+    such that the colors correspond to matrix values.
+
+
+scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
+
+    Generates a 3-dimensional scatter plot 
+    of given coordinate vectors; optionally plots 
+    them on separate traces based on an aggregation.
+
+
+scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
+
+    Generates a 2-dimensional scatter plot 
+    of given coordinate vectors; optionally plots 
+    them on separate traces based on an aggregation.
+
+bars(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwargs):
+
+    Generates a stacked bar plot of a given array of vectors; 
+    the rows index the horizontally separate bars 
+    and the columns index the stack heights.
+
+dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
+
+    Generates a dendrogram of a hierarchical clustering scheme 
+    in a Plotly Figure. Uses Plotly Shapes to draw 
+    the dendrogram and a scatter plot to 
+    highlight clusters at their branching points.
+
+"""
+
+def heatmap(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwargs):
+    """
+    Generates a heatmap of a given matrix: that is, displays the matrix as a table of colored blocks such that the colors correspond to matrix values.
+
+    Arguments
+    ---------
+    mat :       The matrix whose values are being visualized in a heatmap.
+
+    Keyword Arguments
+    -----------------
+    show_x :    An array of the column indices which are to be shown, in the order they should be shown.
+
+    show_y :    An array of the row indices which are to be shown, in the order they should be shown.
+
+    xlabels :   An array or group of how the columns should be labeled on the plot.
+
+    ylabels :   An array or group of how the rows should be labeled on the plot.
+
+    layout :    A dictionary for updating values for the Plotly Figure layout.
+
+    **kwargs :  Keyword arguments for the Plotly Heatmap trace.
+
+    Output
+    ------
+    fig :       A Plotly Figure containing the heatmap.
+    """
+    if show_x is None:
+        show_x = np.arange(mat.shape[1])
+    if show_y is None:
+        show_y = np.arange(mat.shape[0])
+    if xlabels is None:
+        xlabels = np.arange(mat.shape[1])
+    if ylabels is None:
+        ylabels = np.arange(mat.shape[0])
+
     fig = go.Figure(data=go.Heatmap(
-                        z=mat[which_y][:,which_x],zmid=zmid,colorscale=colorscale))
+                        z=mat[show_y][:,show_x],**kwargs))
     fig.update_layout(
         xaxis = dict(
             tickmode = 'array',
-            tickvals = np.arange(len(which_x)),
-            ticktext = xlabels[which_x]
+            tickvals = np.arange(len(show_x)),
+            ticktext = xlabels[show_x]
         ),
         yaxis = dict(
             tickmode = 'array',
-            tickvals = np.arange(len(which_y)),
-            ticktext = ylabels[which_y]
+            tickvals = np.arange(len(show_y)),
+            ticktext = ylabels[show_y]
         ),
         margin=dict(l=100, r=100, t=20, b=20),
     )
+
+    if layout is not None:
+        fig.update_layout(**layout)
+
     return fig
 
-def scatter3D(vecs,**kwargs):
-    id_label = kwargs.get('id_label','ID')
-    color_label = kwargs.get('color_label','Color')
-    item_labels = kwargs.get('item_labels',None)
-    show_items = kwargs.get('show_items',None)
-    if len(vecs.shape)==2:
-        keywords = {k:[v] for k,v in kwargs.items() if not(k in ['id_label', 'color_label', 'item_labels','show_items'])}
-        vecs = np.stack([vecs])
-    else:
-        keywords = {k:v for k,v in kwargs.items() if not(k in ['id_label', 'color_label', 'item_labels','show_items'])}
-    if show_items is None:
-        show_items = np.stack([np.arange(vecs.shape[2])]*vecs.shape[0])
-    if item_labels is None:
-        item_labels = np.arange(vecs.shape[2])
-    
-    fig = go.Figure(data=[go.Scatter3d(x=vecs[j,0,show_items[j]],
-                                y=vecs[j,1,show_items[j]],
-                                z=vecs[j,2,show_items[j]],
-                                   mode='markers',
-                                   marker={k:v[j] for k,v in keywords.items()},
-                                   customdata=item_labels[show_items[j]],
-                                   hovertemplate ='<i>'+id_label+'</i>: %{customdata}<br> <i>'+color_label+'</i>:%{marker.color} <br>')                   
-                        for j in range(vecs.shape[0])])
+def scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
+    """
+    Generates a 3-dimensional scatter plot of given coordinate vectors; optionally plots them on separate traces based on an aggregation.
+
+    Arguments
+    ---------
+    x :             The x-coordinates of the data points.
+
+    y :             The y-coordinates of the data points.
+
+    z :             The z-coordinates of the data points.
+
+    Keyword Arguments
+    -----------------
+    agg :           An Aggregation of the indices of x, y and z.
+
+    show_items :    A one-dimensional array of which indices of x, y and z are to be shown.
+
+    layout :        A dictionary for updating values for the Plotly Figure layout.
+
+    **kwargs :      Keyword arguments for the Plotly Scatter3d trace.
+                    If an attribute is given as a single string or float, will be applied to all data points. 
+                    If as an array of length x.shape[0], will be applied separately to each data point.
+                    If an an array of length agg.clusters.size, will be applied separately to each cluster.
+
+
+    Output
+    ------
+    fig :           A Plotly Figure containing the scatter plot.
+    """
+    if agg is None:
+        agg = Aggregation(Group(np.arange(x.shape[0])),
+                          Group(np.array([0])),
+                          {0:np.arange(x.shape[0])})
+    specific_keywords = [{} for i in range(agg.clusters.size)]
+    for k,v in kwargs.items():
+        if hasattr(v, '__len__') and not(isinstance(v,str)):
+            if len(v)==len(agg.clusters):
+                for i in range(agg.clusters.size):
+                    specific_keywords[i][k] = v[i]
+        else:
+            for i in range(agg.clusters.size):
+                specific_keywords[i][k] = v
+    if kwargs.get('name',None) is None:
+        for i in range(agg.clusters.size):
+            specific_keywords[i]['name'] = str(agg.clusters.elements[i])
+    fig = go.Figure(data=[go.Scatter3d(x=x[agg._aggregations[i]],
+                                       y=y[agg._aggregations[i]],
+                                       z=z[agg._aggregations[i]],
+                                       **(specific_keywords[i]))                   
+                        for i in range(agg.clusters.size)])
     return fig
 
-def scatter2D(vecs,**kwargs):
-    id_label = kwargs.get('id_label','ID')
-    color_label = kwargs.get('color_label','Color')
-    item_labels = kwargs.get('item_labels',None)
-    show_items = kwargs.get('show_items',None)
-    names = kwargs.get('names',None)
-    if len(vecs.shape)==2:
-        keywords = {k:[v] for k,v in kwargs.items() if not(k in ['id_label', 'color_label', 'item_labels','show_items','names'])}
-        vecs = np.stack([vecs])
-    else:
-        keywords = {k:v for k,v in kwargs.items() if not(k in ['id_label', 'color_label', 'item_labels','show_items','names'])}
-    if show_items is None:
-        show_items = np.stack([np.arange(vecs.shape[2])]*vecs.shape[0])
-    if item_labels is None:
-        item_labels = np.arange(vecs.shape[2])
-    if names is None:
-        names = np.arange(vecs.shape[0]).astype(str)
+def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
+    """
+    Generates a 2-dimensional scatter plot of given coordinate vectors; optionally plots them on separate traces based on an aggregation.
+
+    Arguments
+    ---------
+    x :             The x-coordinates of the data points.
+
+    y :             The y-coordinates of the data points.
+
+    Keyword Arguments
+    -----------------
+    agg :           An Aggregation of the indices of x and y.
+
+    show_items :    A one-dimensional array of which indices of x and y are to be shown.
+
+    layout :        A dictionary for updating values for the Plotly Figure layout.
+
+    **kwargs :      Keyword arguments for the Plotly Scatter trace.
+                    If an attribute is given as a single string or float, will be applied to all data points. 
+                    If as an array of length x.shape[0], will be applied separately to each data point.
+                    If an an array of length agg.clusters.size, will be applied separately to each cluster.
+
+
+    Output
+    ------
+    fig :           A Plotly Figure containing the scatter plot.
+    """
+    if agg is None:
+        agg = Aggregation(Group(np.arange(x.shape[0])),
+                          Group(np.array([0])),
+                          {0:np.arange(x.shape[0])})
+    specific_keywords = [{} for i in range(agg.clusters.size)]
+    for k,v in kwargs.items():
+        if hasattr(v, '__len__') and not(isinstance(v,str)):
+            if len(v)==len(agg.clusters):
+                for i in range(agg.clusters.size):
+                    specific_keywords[i][k] = v[i]
+            elif len(v)==len(agg.items):
+                for i in range(agg.clusters.size):
+                    specific_keywords[i][k] = v[agg._aggregations[i]]
+        else:
+            for i in range(agg.clusters.size):
+                specific_keywords[i][k] = v
+    if kwargs.get('name',None) is None:
+        for i in range(agg.clusters.size):
+            specific_keywords[i]['name'] = str(agg.clusters.elements[i])
+
+    fig = go.Figure(data=[go.Scatter(x=x[agg._aggregations[i]],
+                                       y=y[agg._aggregations[i]],
+                                       **(specific_keywords[i]))                   
+                        for i in range(agg.clusters.size)])
+    return fig
+
+def bars(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwargs):
+    """
+    Generates a stacked bar plot of a given array of vectors; the rows index the horizontally separate bars and the columns index the stack heights.
+
+    Arguments
+    ---------
+    mat :       The matrix whose values are being visualized in a stacked bar plot.
+
+    Keyword Arguments
+    -----------------
+    show_x :    An array of the row indices (horizontally separate bars) which are to be shown, in the order they should be shown.
+
+    show_y :    An array of the column indices (stacked bars) which are to be shown, in the order they should be shown.
+
+    xlabels :   An array or group of how the rows should be labeled on the plot.
+
+    ylabels :   An array or group of how the columns should be labeled on the plot.
+
+    layout :    A dictionary for updating values for the Plotly Figure layout.
+
+    **kwargs :  Keyword arguments for the Plotly Bar trace. 
+                If an attribute is given as a single string or float, will be applied to all bars. 
+                If as an array of length mat.shape[1], will be applied separately to each layer of the stack.
+
+    Output
+    ------
+    fig :       A Plotly Figure containing the stacked bars.
+    """
+    if show_x is None:
+        show_x = np.arange(mat.shape[0])
+    if show_y is None:
+        show_y = np.arange(mat.shape[1])
+    if xlabels is None:
+        xlabels = np.arange(mat.shape[0]).astype(str)
+    if ylabels is None:
+        ylabels = np.arange(mat.shape[1]).astype(str)
+
+    specific_keywords = [{} for i in range(mat.shape[1])]
+    for k,v in kwargs.items():
+        if hasattr(v, '__len__') and not(isinstance(v,str)):
+            if isinstance(v,np.ndarray):
+                if len(v.shape)==2:
+                    for i in range(mat.shape[1]):
+                        specific_keywords[i][k] = v[k,i]
+                else:
+                    for i in range(mat.shape[1]):
+                        specific_keywords[i][k] = v[i]
+            else:
+                for i in range(mat.shape[1]):
+                    specific_keywords[i][k] = v[i]
+        else:
+            for i in range(mat.shape[1]):
+                specific_keywords[i][k] = v
+
+    if kwargs.get('width',None) is None:
+        for i in range(mat.shape[1]):
+            specific_keywords[i]['width'] = 1 
+
+    fig = go.Figure(data=[
+        go.Bar(name=ylabels[o], x=xlabels, y=mat[show_x,o], **specific_keywords[o]) for o in show_y
+    ])
+    fig.update_layout(barmode='stack',
+                    xaxis = dict(
+                        tickmode = 'array',
+                        tickvals = np.arange(len(show_x)),
+                        ticktext = (xlabels)[show_x]
+                    ),)
+
+    if layout is not None:
+        fig.update_layout(**layout)
+    return fig
+
+
+def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
+    """
+    Generates a dendrogram of a hierarchical clustering scheme in a Plotly Figure. Uses Plotly Shapes to draw the dendrogram and a scatter plot to highlight clusters at their branching points.
+
+    Arguments
+    ---------
+    hier :          A Hierarchy which is to be plotted as a Dendrogram.
+
+    Keyword Arguments
+    -----------------
+    line :          A dict for formatting Plotly shape lines.
+                    If an attribute is given as a single string or float, will be applied to all lines.
+                    If as an array of length hier.clusters.size, will be applied separately to the lines immediately beneath each cluster.
+
+    layout :        A dictionary for updating values for the Plotly Figure layout.
+
+    show_progress : Boolean; whether to show a tqdm progress bar as the dendrogram is generated.
+
+    **kwargs :      Keyword arguments for the Plotly Scatter trace. 
+                    If an attribute is given as a single string or float, will be applied to all branch points. 
+                    If as an array of length hier.clusters.size, will be applied separately to each cluster's branch point.
+
+    Output
+    ------
+    fig :           A Plotly Figure containing the dendrogram.
+    """
+    groups = hier.cluster_groups()
+
+    x_items = np.zeros([hier.items.size])
+    s_max = np.max(hier._scales)
+    top_agg = hier.at_scale(s_max)
+    x_base = 0
+    x_in_superset = []
+    for c in range(top_agg.clusters.size):
+        grp = top_agg._aggregations[c]
+        n = len(grp)
+        x_items[grp] = np.arange(n)+x_base
+        x_base += n
+        x_in_superset = x_in_superset + list(top_agg._aggregations[c])
+    x_in_superset = np.array(x_in_superset)
     
-    fig = go.Figure(data=[go.Scatter(x=vecs[j,0,show_items[j]],
-                                y=vecs[j,1,show_items[j]],
-                                   mode='markers',
-                                   marker={k:v[j] for k,v in keywords.items()},
-                                   customdata=item_labels[show_items[j]],
-                                   hovertemplate ='<i>'+id_label+'</i>: %{customdata}<br> <i>'+color_label+'</i>:%{marker.color} <br>',
-                                   name=str(names[j]))                   
-                        for j in range(vecs.shape[0])])
+    x_clusters = np.zeros([hier.clusters.size])
+    y_clusters = np.zeros([hier.clusters.size])
+    fig = go.Figure()
+
+    lineinfo = [{} for c in range(hier.clusters.size)]
+    if line is None:
+        for c in range(hier.clusters.size):
+            lineinfo[c]=dict(
+                    color="RoyalBlue",
+                    width=3)
+    else:
+        for k,v in line.items():
+            if hasattr(v, '__len__') and not(isinstance(v,str)):
+                for c in range(hier.clusters.size):
+                    lineinfo[c][k] = v[c]
+            else:
+                for c in range(hier.clusters.size):
+                    lineinfo[c][k] = v
+    if show_progress:
+        clust_iter = tqdm(range(hier.clusters.size))
+    else:
+        clust_iter = range(hier.clusters.size)
+    
+    for c in clust_iter:
+        x_clusters[c] = np.average(x_items[groups[hier.clusters[c]].in_superset])
+        y_clusters[c] = hier._scales[c]
+        if len(hier._children[c])>0:
+            xmin = np.min(x_clusters[hier._children[c]])
+            xmax = np.max(x_clusters[hier._children[c]])
+            fig.add_shape(
+                        # Line Horizontal
+                        dict(
+                            type="line",
+                            x0=xmin,
+                            y0=y_clusters[c],
+                            x1=xmax,
+                            y1=y_clusters[c],
+                            line=lineinfo[c]
+                    ))
+            for k in hier._children[c]:
+                fig.add_shape(
+                            # Line Vertical
+                            dict(
+                                type="line",
+                                x0=x_clusters[k],
+                                y0=y_clusters[k],
+                                x1=x_clusters[k],
+                                y1=y_clusters[c],
+                                line=lineinfo[c]
+                        ))
+        
+    if kwargs.get('customdata',None) is None:
+        customdata=hier.clusters.elements
+    if kwargs.get('hovertemplate',None) is None:
+        hovertemplate = '<b>ID</b>: %{customdata} <br><b>Scale</b>: %{y} '
+    fig.add_trace(go.Scatter(x=x_clusters,y=y_clusters,
+                    mode='markers',
+                    customdata=customdata, 
+                    hovertemplate = hovertemplate,**kwargs))
+    fig.update_layout(
+            title = kwargs.get('title','Dendrogram'),
+            margin=dict(l=20, r=20, t=30, b=10),
+            xaxis_title=kwargs.get('x_axis_label','Items'),
+            yaxis_title=kwargs.get('y_axis_label','Scale'),
+            xaxis = dict(
+                tickmode = 'array',
+                tickvals = np.arange(hier.items.size),
+                ticktext = hier.items.elements[x_in_superset]
+            ))
+    fig.update_shapes(layer='below')
+    fig.update_xaxes(showgrid=False,zeroline=False)
+    fig.update_yaxes(showgrid=False,zeroline=False)
+    if layout is not None:
+        fig.update_layout(layout)
     return fig

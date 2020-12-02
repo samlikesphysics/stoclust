@@ -24,8 +24,10 @@ class Aggregation:
     block_mat:      Returns a block-diagonal matrix whose indices 
                     correspond to items and which contains a block
                     for every cluster.
+
     by_cluster:     Returns an array B, whose indices correspond to items,
                     such that B[j] is the cluster containing self.items[j].
+                    
     as_dict:        Returns a dictionary whose keys are from self.clusters
                     and whose values are Groups corresponding to said clusters.
     """

@@ -2,11 +2,10 @@
 layout: docs
 title: Group
 parent: stoclust
-permalink: /stoclust/Group/
+permalink: /docs/Group/
 children: 1
-excerpt: 'A cross between an array and a set, which contains no duplicate elements but allows indexing and can allows cross-referencing between a Group and its sub-Groups.'
 list_title: 'Methods'
-def: 'Group(self, elements, superset=None)'
+def: 'Group(elements, superset=None)'
 ---
 
 A cross between an array and a set, which contains

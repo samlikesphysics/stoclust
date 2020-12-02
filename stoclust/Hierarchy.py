@@ -1,7 +1,6 @@
 import numpy as np
 from stoclust.Group import Group
 from stoclust.Aggregation import Aggregation
-from stoclust import utils
 from functools import reduce
 
 class Hierarchy:
@@ -28,21 +27,29 @@ class Hierarchy:
     -------
     cluster_children:       Returns a dictionary where keys are cluster labels and
                             the values are the immediate child clusters.
+
     cluster_groups:         Returns a dictionary where keys are cluster labels and
                             the values are all items under the key cluster.
+
     clusters_containing:    Returns a Group containing all cluster labels for clusters
                             that contain the given items.
+
     at_scale:               Returns the aggregation corresponding to the coarsest
                             partition made from clusters not exceeding the given scale.
+
     join:                   Returns the smallest cluster that is a supercluster of all
                             given clusters.
+
     measure:                Given a field (array of values over items), gives the partial
                             sums of the field over each cluster in the form of an array
                             whose indices correspond to those of self.clusters.
+
     get_ultrametric:        Returns a Parisi matrix P of nested diagonal blocks, such that
                             P[i,j] is the smallest scale at which i and j are in the
                             same cluster.
+
     get_scales:             Returns the array of scales, indexed like self.clusters.
+    
     set_scales:             Allows the user to define the scales through an array
                             indexed like self.clusters.
     """
@@ -110,7 +117,7 @@ class Hierarchy:
         """
         C_tree = self._children
         C_less_than = {k:C_tree[k] for k in C_tree.keys() if self._scales[k]<=scale}
-        C_top = {k:C_less_than[k] for k in C_less_than.keys() if utils.is_canopy(k,C_less_than)}
+        C_top = {k:C_less_than[k] for k in C_less_than.keys() if is_canopy(k,C_less_than)}
         C_groups = self.cluster_groups()
         C_top_lists = {k:C_groups[self.clusters[k]].in_superset for k in C_top.keys()}
         C_top_group = Group(self.clusters.elements[np.array(list(C_top_lists.keys()))],superset=self.clusters)
@@ -184,3 +191,15 @@ class Hierarchy:
         Returns the array of scales, indexed like self.clusters.
         """
         return self._scales
+
+def is_canopy(k,C_less_than):
+    """
+    A check used by the Hierarchy class to determine whether
+    a given cluster index is a top-level cluster among
+    a given subset of clusters.
+    """
+    is_cpy = True
+    for j in C_less_than:
+        if (len(C_less_than[j])>1) and (k in C_less_than[j]):
+            is_cpy = False
+    return is_cpy

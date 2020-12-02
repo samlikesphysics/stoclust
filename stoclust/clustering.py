@@ -7,12 +7,81 @@ from stoclust.Hierarchy import Hierarchy
 from stoclust import simulation
 from stoclust import regulators
 
+"""
+stoclust.clustering
+
+Contains functions providing basic clustering techniques
+motivated by stochastic analysis.
+
+Functions
+---------
+split_by_gaps(vec,num_gaps = 1,group = None)
+
+    Aggregates the indices of a vector 
+    based on gaps between index values.
+    The number of gaps is specified by num_gaps,
+    and the largest num_gaps gaps in the sorted array
+    are used to cluster values.
+
+split_by_quantiles(vec,quantiles=0.95,group = None)
+
+    Like split_by_vals, but cuts the vector at specific quantiles
+    rather than rigid values. Assumes right-continuity of the 
+    cumulative distribution function.
+
+split_by_vals(vec,cuts=0,group = None,tol=0)
+
+    Aggregates the indices of a vector based on specified
+    values at which to cut the sorted array. Assumes the
+    right-continuity of the cumulative distribution function.
+
+meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = None)
+
+    Given a column-stochastic matrix describing the strength
+    of the relationship between pairs of items,
+    determines an aggregation of the items using the dynamical
+    approach of Meyer and Wessell.
+
+shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None)
+
+    Given a stochastic matrix describing the strength
+    of the relationship between pairs of items,
+    determines an aggregation of the items using
+    the spectral approach of Shi and Malik.
+
+fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None)
+    Given a square stochastic matrix describing the strength
+    of the relationship between pairs of items,
+    determines an aggregation of the items using
+    the regulated random walk approach of Fushing and McAssey.
+
+hier_from_blocks(block_mats,scales=None,group=None)
+    Given a parameterized ensemble of block matrices, 
+    each more coarse-grained than the last,
+    constructs a corresponding Hierarchy object.
+
+"""
+
 def split_by_gaps(vec,num_gaps = 1,group = None):
     """
     Aggregates the indices of a vector based on gaps between index values.
     The number of gaps is specified by num_gaps,
     and the largest num_gaps gaps in the sorted array
     are used to cluster values.
+
+    Arguments
+    ---------
+    vec :       A one-dimensional array of values.
+
+    Keyword Arguments
+    -----------------
+    num_gaps :  The number of gaps to use to break vec into clusters.
+
+    group :     The group which labels the indices of vec, and which will be the item set of the returned Aggregation.
+
+    Output
+    ------
+    Aggregation of the indices of vec
     """
     if group is None:
         group = Group(np.arange(len(vec)))
@@ -31,6 +100,20 @@ def split_by_quantiles(vec,quantiles=0.95,group = None):
     Like split_by_vals, but cuts the vector at specific quantiles
     rather than rigid values. Assumes right-continuity of the 
     cumulative distribution function.
+
+    Arguments
+    ---------
+    vec :       A one-dimensional array of values.
+
+    Keyword Arguments
+    -----------------
+    quantiles : A single value or list/array of quantiles which will be used to divide the vector components.
+
+    group :     The group which labels the indices of vec, and which will be the item set of the returned Aggregation.
+
+    Output
+    ------
+    Aggregation of the indices of vec
     """
     num = len(vec)
     if group is None:
@@ -52,15 +135,29 @@ def split_by_vals(vec,cuts=0,group = None,tol=0):
     Aggregates the indices of a vector based on specified
     values at which to cut the sorted array. Assumes the
     right-continuity of the cumulative distribution function.
+
+    Arguments
+    ---------
+    vec :   A one-dimensional array of values.
+
+    Keyword Arguments
+    -----------------
+    cuts :  A single value or list/array of values which will be used to divide the vector components.
+
+    group : The group which labels the indices of vec, and which will be the item set of the returned Aggregation.
+
+    Output
+    ------
+    Aggregation of the indices of vec
     """
     if group is None:
         group = Group(np.arange(len(vec)))
 
     if not(isinstance(cuts,np.ndarray)):
         if isinstance(cuts,list):
-            cuts = np.array(cuts)+tol
+            cuts = np.array(cuts)
         else:
-            cuts = np.array([cuts])+tol
+            cuts = np.array([cuts])
     
     cuts = cuts[np.where(np.logical_and(cuts>np.amin(vec),cuts<=np.amax(vec)))[0]]
 
@@ -75,22 +172,61 @@ def split_by_vals(vec,cuts=0,group = None,tol=0):
 
         return Aggregation(group,Group(np.arange(len(cuts)+1)),agg_dict)
 
-def meyer_wessell(bi_mat,min_times_same = 5,vector_clustering = None,group = None):
+def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = None):
     """
-    Given a bistochastic matrix describing the strength
+    Given a column-stochastic matrix describing the strength
     of the relationship between pairs of items,
     determines an aggregation of the items using the dynamical
     approach of Meyer and Wessell. The algorithm
     is inherently random, though fairly stable, and so may
     be used as a one-shot measure but will be more reliable
     in an ensemble.
+
+    A column-stochastic matrix T will, by the Perron-Frobenius theorem,
+    have a uniform vector u = (1,...,1) as a fixed point, that is:
+
+    T u = u
+    
+    This fixed point is unique as long as 
+    the stochastic matrix is not reducible
+    into disconnected components. If it is almost reducible
+    (that is, if there are strongly connected communities with
+    weak connections between them), the vector T^t u will achieve
+    uniformity among the connected components before achieving global
+    uniformity. 
+
+    The Meyer-Wessell approach relies on applying the
+    column-stochastic matrix T to a random initial vector x and
+    detecting communities by identifying clusters of components which
+    achieve uniformity long before global uniformity is reached.
+    This is done by iteratively applying T to x and, at each iteration,
+    performing some kind of vector clustering on T^t x. When
+    the resulting Aggregation ceases to change ove a long
+    enough number of iterations, it is returned as the final Aggregation.
+
+    Arguments
+    ---------
+    st_mat :            A square bistochastic matrix.
+
+    Keyword Arguments
+    -----------------
+    min_times_same :    The number of iterations after which, if the clustering has not changed, the algorithm halts.
+
+    vector_clustering : The particular method of vector clustering which should be used in the algorithm.
+                        Should receive a vector as the sole input and return an Aggregation.
+
+    group :             The group which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
+
+    Output
+    ------
+    Aggregation of the indices of st_mat
     """
     method = vector_clustering
     if group is None:
-        group = Group(np.arange(bi_mat.shape[0]))
+        group = Group(np.arange(st_mat.shape[0]))
 
     if method is None:
-        eigs,vecs = la.eig(bi_mat)
+        eigs,vecs = la.eig(st_mat)
         eig_agg = split_by_gaps(eigs)
         k = len(eig_agg[1])
         if k>1:
@@ -98,12 +234,12 @@ def meyer_wessell(bi_mat,min_times_same = 5,vector_clustering = None,group = Non
         else:
             method = lambda v:Aggregation(group,Group(np.array([0])),{0:np.arange(len(group))})
 
-    x = np.random.rand(bi_mat.shape[0])
+    x = np.random.rand(st_mat.shape[0])
     times_same = 1
     new_agg = method(x)
     by_cluster = method(x).by_cluster()
     while times_same < min_times_same:
-        x = bi_mat@x
+        x = st_mat@x
         new_agg = method(x)
         new_by_cluster = new_agg.by_cluster()
         if np.all(new_by_cluster == by_cluster):
@@ -113,12 +249,63 @@ def meyer_wessell(bi_mat,min_times_same = 5,vector_clustering = None,group = Non
         by_cluster = new_by_cluster
     return new_agg
     
-def shi_malik(st_mat,eig_thresh=0.95,tol=0,group=None):
+def shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None):
     """
     Given a stochastic matrix describing the strength
     of the relationship between pairs of items,
     determines an aggregation of the items using
     the spectral approach of Shi and Malik.
+
+    A column-stochastic matrix T will always have a leading
+    eigenvalue of 1 and a leading uniform right-eigenvector, 
+    u=(1,...,1), which is a fixed point of the map:
+
+    T u = u
+
+    If T has no disconnected components then u is the
+    unique fixed point (up to a constant scaling) 
+    and the sub-leading eigenvalue
+    is strictly less than one; otherwise, the eigenvalue
+    1 is degenerate. In the first case, if the sub-leading
+    eigenvalue is close to 1, then the sub-leading
+    right-eigenvector y may be used to partition the indices into
+    two slowly-decaying communities.
+
+    The Shi-Malik algorithm is recursive, taking
+    the sub-leading eigenvector of T (as long as the
+    corresponding eigenvalue is above a threshold),
+    using it to bipartition the indices, and then
+    repeating these steps on the partitions with a reweighted
+    matrix. This implementation cuts the vector y by value,
+    by default into components y>0 and y<=0, because of the
+    orthogonality relationship
+
+    <y>_pi = y . pi = 0
+
+    which indicates that the mean value of y
+    under the stationary distribution pi 
+    (left-eigenvector of T)
+    must always be zero, making this a value of significance.
+
+    The algorithm halts when no community has a sub-leading
+    eigenvector above the threshold, and the final partitioning
+    is returned as an Aggregation.
+
+    Arguments
+    ---------
+    st_mat :        A square stochastic matrix describing a Markov dynamic.
+
+    Keyword Arguments
+    -----------------
+    eig_thresh :    The smallest value the subleading eigenvalue may have to continue the recursion.
+
+    cut :           The value used to "cut" the subleading eigenvector into two clusters.
+
+    group :         The group which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
+
+    Output
+    ------
+    Aggregation of the indices of st_mat
     """
     if group is None:
         group = Group(np.arange(st_mat.shape[0]))
@@ -136,7 +323,7 @@ def shi_malik(st_mat,eig_thresh=0.95,tol=0,group=None):
                 einds = np.flip(np.argsort(np.abs(eigs)))
                 if eigs[einds[1]]>eig_thresh:
                     y = np.real(evecs[:,einds[1]])
-                    ind_agg = split_by_vals(y/np.sum(y),group=c,tol=tol)
+                    ind_agg = split_by_vals(y/np.sum(y),group=c,cuts=cut)
                     if ind_agg.clusters.size>1:
                         new_clusts.append(c.in_superset[ind_agg[0].in_superset])
                         new_clusts.append(c.in_superset[ind_agg[1].in_superset])
@@ -156,7 +343,7 @@ def shi_malik(st_mat,eig_thresh=0.95,tol=0,group=None):
         
 def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
     """
-    Given a stochastic matrix describing the strength
+    Given a square stochastic matrix describing the strength
     of the relationship between pairs of items,
     determines an aggregation of the items using
     the regulated random walk approach of Fushing and McAssey.
@@ -164,6 +351,42 @@ def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
     and highly unstable as a single-shot approach,
     but may be used in an ensemble to determine a 
     useful similarity matrix.
+
+    Suppose st_mat is given by the Markov matrix T.
+    A regulated random walk is taken using T as the initial
+    transition probabilities, and modifying these probabilities
+    to remove from circulation any node which has been visited
+    at least max_visits times (this prevents the walk from
+    being stuck in a cluster for too long). The time between removals
+    is recorded; the highest values (determined by time_quantile_cutoff)
+    determine the number of clusters (it is interpreted that a sudden long
+    removal time after many short removal times indicates 
+    one has left a highly-explored cluster and entered an unexplored one).
+
+    A node which was removed and for which >50% of its visits
+    prior to removal were in particular time-interval is placed in the cluster
+    associated with that time interval; all other nodes remain unclustered.
+
+    This algorithm will not return useful results after a single run,
+    but if an ensemble of runs is collected it may be used to
+    derive a similarity matrix, based on how often two nodes are in
+    a cluster together over the many runs.
+
+    Arguments
+    ---------
+    st_mat :                A square stochastic matrix describing a Markov dynamic.
+
+    Keyword Arguments
+    -----------------
+    max_visits :            The maximum number of visits to a node before it is removed in the regulated random walk.
+
+    time_quantile_cutoff :  The quantile of the length of time between node removals, which is used to determine the number of clusters.
+
+    group :                 The group which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
+
+    Output
+    ------
+    Aggregation of the indices of st_mat
     """
     if group is None:
         group = Group(np.arange(st_mat.shape[0]))
@@ -194,6 +417,24 @@ def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
     return Aggregation(group,Group(cluster_names),agg_dict)
 
 def hier_from_blocks(block_mats,scales=None,group=None):
+    """
+    Given a parameterized ensemble of block matrices, each more coarse-grained than the last,
+    constructs a corresponding Hierarchy object.
+
+    Arguments
+    ---------
+    block_mats :    A three-dimensional array. The first dimension is the ensemble dimension, and the remaining two dimensions are equal.
+
+    Keyword Arguments
+    -----------------
+    scales :        A one-dimensional monotonically increasing array, giving a scale parameter for each ensemble
+
+    group :         The group which labels the indices of block_mats.shape[1], and which will be the item set of the returned Aggregation.
+
+    Output
+    ------
+    Hierarchy of the indices of block_mats.shape[1]
+    """
     if group is None:
         group = Group(np.arange(block_mats.shape[1]))
     if scales is None:
@@ -205,7 +446,7 @@ def hier_from_blocks(block_mats,scales=None,group=None):
     proper_clusters = 0
     for j in range(block_mats.shape[0]):
         st_mat = utils.stoch(new_block_mats[j])
-        agg = shi_malik(st_mat,eig_thresh=0.99,group=current_agg.clusters,tol=1e-6)
+        agg = shi_malik(st_mat,eig_thresh=0.99,group=current_agg.clusters,cut=1e-6)
         new_agg_dict = {}
         new_agg_names = []
         num_clusters = 0

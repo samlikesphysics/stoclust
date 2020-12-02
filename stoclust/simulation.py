@@ -4,7 +4,25 @@ from stoclust import utils
 from stoclust import regulators
 from stoclust.Group import Group
 
-def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,**kwargs):
+"""
+stoclust.simulation
+
+Will contain functions for generating random walks
+of various types. For now, only contains regulated
+Markovian walks.
+
+Functions
+---------
+markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,max_time=100,tol=1e-6):
+
+    Given a set of transition probabilities, generates a random walk
+    through the available nodes. This walk may be regulated by
+    a regulator function or halting condition. See stoclust.regulators
+    for further details.
+
+"""
+
+def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,max_time=100,tol=1e-6):
     """
     Given a set of transition probabilities, generates a random walk
     through the available nodes. The initial node, if not specified,
@@ -31,6 +49,43 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,**
     A halting condition takes the time, current node, and node data.
     If neither are specified, the maximum length will
     be set to 100 steps.
+
+    Arguments
+    ---------
+
+    probs :         A square Markov matrix indicating the 
+                    transition probabilities for the walk.
+
+    initial :       The initial node. If group is not None, 
+                    then the type of initial should be the 
+                    type of the elements of group. Otherwise, 
+                    initial should be the index of the initial node. 
+                    If not specified, a random node will be chosen.
+
+    group :         A Group whose elements label the indices of probs. 
+                    If specified, inputs like initial and outputs 
+                    like the path refer to nodes by their labels. 
+                    If not specified, nodes will be referred to 
+                    in inputs and outputs by their index.
+
+    regulator :     The regulator determines how the probability matrix 
+                    will be modified over the course of the walk, 
+                    and what events will be noted in reports. 
+                    See stoclust.regulators for more details. 
+                    If not specified, a trivial regulator will be used 
+                    which never modifies the transition matrix 
+                    and returns no reports.
+
+    halt :          The halt condition determines under what conditions 
+                    the walk should stop. See the stoclust.regulators 
+                    for more details. If not specified, a trivial halt 
+                    condition to stop after a specified number of steps 
+                    will be used; the number of steps can be changed 
+                    using the max_time argument.
+
+    max_time :      If a halt condition is not specified, then the walk 
+                    is halted automatically after max_time steps. 
+                    The default is set to 100.
     """
     if group is None:
         group = Group(np.arange(probs.shape[0]))
@@ -39,15 +94,12 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,**
         regulator = lambda t,ps,an,nd: (False,None,ps)
 
     if halt is None:
-        max_time = kwargs.get('max_time',100)
         halt = lambda t,an,nd: regulators.halt_after_time(t,an,nd,max_time=max_time)
 
     if initial is None:
         initial_ind = np.random.choice(np.arange(probs.shape[0]))
     else:
         initial_ind = group.ind[initial]
-    
-    tol = kwargs.get('tol',1e-6)
     
     reports = []
     locations = []
