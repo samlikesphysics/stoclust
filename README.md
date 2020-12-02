@@ -31,8 +31,8 @@ In addition to these are several auxiliary modules such as
 of data and clusters; and
 `utils`, which contains useful miscellaneous functions.
 
-Check out our [**Documentation**](https://samlikesphysics.github.io/stoclust/docs/) 
-for examples and further info!
+Check out our [**site**](https://samlikesphysics.github.io/stoclust/) 
+for documentation, examples and further info!
 
 # Installation
 
