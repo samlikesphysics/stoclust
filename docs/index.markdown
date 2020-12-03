@@ -57,3 +57,12 @@ The present installation consists of two console steps, run in the the same fold
 ```
 
 # Dependencies
+
+`stoclust` depends on the following packages:
+
+| Package | Recommended version |
+| ------- | ------------------- |
+| `numpy` | 1.15.0              |
+| `scipy` | 1.1.0               |
+| `plotly`| 4.12.0              |
+| `tqdm`  | 4.41.1              |
