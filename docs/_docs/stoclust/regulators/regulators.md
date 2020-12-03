@@ -8,7 +8,7 @@ list_title: 'Functions'
 ---
 
 Contains some pre-defined regulators and halting
-conditions for use in the markov_random_walk method.
+conditions for use in the `markov_random_walk` method.
 
 A regulator is any function which receives the following arguments...
 
