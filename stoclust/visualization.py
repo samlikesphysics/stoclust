@@ -153,6 +153,8 @@ def scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
                                        z=z[agg._aggregations[i]],
                                        **(specific_keywords[i]))                   
                         for i in range(agg.clusters.size)])
+    if layout is not None:
+        fig.update_layout(**layout)
     return fig
 
 def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
@@ -207,6 +209,8 @@ def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
                                        y=y[agg._aggregations[i]],
                                        **(specific_keywords[i]))                   
                         for i in range(agg.clusters.size)])
+    if layout is not None:
+        fig.update_layout(**layout)
     return fig
 
 def bars(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwargs):

@@ -8,5 +8,9 @@ setup(
     packages=['stoclust'],
     description='Modular methods for stochastic clustering',
     install_requires=[
+        'numpy >= 1.15.0',
+        'scipy >= 1.1.0',
+        'plotly >= 4.12.0',
+        'tqdm >= 4.41.1'
     ],
 )
