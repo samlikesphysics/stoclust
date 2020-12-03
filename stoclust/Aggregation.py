@@ -36,27 +36,6 @@ class Aggregation:
         self.clusters = cluster_group
         self._aggregations = agg_dict
 
- #   @classmethod
- #   def from_labels(cls,items,labels):
- #       a = np.unique(labels,axis=0)
- #       [tuple(list(a[j])) for j in np.arange(a.shape[0])]
- #       clusters = Group(np.unique(labels,axis=0))
- #       agg = {clusters.ind[k]: np.where(np.array([labels[j]==k for j in np.arange(labels.shape[0])]))[0]
- #              for k in clusters}
- #       return cls(items,clusters,agg)
-#        for j in self.items:
-#            num_containing = 0
-#            for c in self.clusters:
-#                occurrences = len(np.where(self.items.ind[j] == self._aggregations[self.clusters.ind[c]])[0])
-#                if occurrences > 1:
-#                    raise ValueError('Cluster '+str(c)+' contains duplicate items.')
-#                elif occurrences == 1:
-#                    num_containing += 1
-#            if num_containing == 0:
-#                raise ValueError('Item '+str(j)+' is not in a cluster.')
-#            elif num_containing > 1:
-#                raise ValueError('Item '+str(j)+' is in multiple clusters.')
-
     def __iter__(self):
         return iter(self.as_dict().items())
     
@@ -97,12 +76,3 @@ class Aggregation:
         """
         return {self.clusters[k]:Group(self.items.elements[self._aggregations[k]],superset=self.items)
                 for k in self._aggregations.keys()}
-
-#    def __mul__(self,other):
-#        labels1 = self.by_cluster()
-#        labels2 = other.by_cluster()
-#        new_labels = np.array([(self.clusters[labels1[j]],other.clusters[labels2[j]]) 
-#                               for j in np.arange(labels1.shape[0])])
-#        return Aggregation.from_labels(self.items,new_labels)
-
-        
