@@ -42,4 +42,18 @@ Check out our [**Documentation**](/stoclust/docs/) for further info!
 
 # Installation
 
+To download the package, you can either download the 
+zip or tarball from the sidebar, or clone the GitHub repository via
+
+```
+>>> git clone https://github.com/samlikesphysics/stoclust.git
+```
+
+The present installation consists of two console steps, run in the the same folder as `setup.py`:
+
+```
+>>> python setup.py build
+>>> python -m pip install .
+```
+
 # Dependencies
