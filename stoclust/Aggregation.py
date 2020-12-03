@@ -1,5 +1,5 @@
-import numpy as np
-from stoclust.Group import Group
+import numpy as _np
+from stoclust.Group import Group as _Group
 
 class Aggregation:
     """
@@ -43,7 +43,7 @@ class Aggregation:
         return 'Aggregation('+str({self.clusters[k]:self.items[v] for k,v in self._aggregations.items()})+')'
 
     def __getitem__(self,key):
-        return Group(self.items.elements[self._aggregations[self.clusters.ind[key]]],superset=self.items)
+        return _Group(self.items.elements[self._aggregations[self.clusters.ind[key]]],superset=self.items)
 
     def __len__(self):
         return self.clusters.size
@@ -54,9 +54,9 @@ class Aggregation:
         correspond to items and which contains a block
         for every cluster.
         """
-        pmat = np.zeros([self.items.size,self.items.size])
+        pmat = _np.zeros([self.items.size,self.items.size])
         for k,g in self._aggregations.items():
-            pmat[np.ix_(g,g)] = np.ones([len(g),len(g)])
+            pmat[_np.ix_(g,g)] = _np.ones([len(g),len(g)])
         return pmat
 
     def by_cluster(self):
@@ -64,9 +64,9 @@ class Aggregation:
         Returns an array B, whose indices correspond to items,
         such that B[j] is the cluster containing self.items[j].
         """
-        bylab = np.zeros([self.items.size])
-        for j in np.arange(self.clusters.size):
-            bylab[self._aggregations[j]] = (j*np.ones([len(self._aggregations[j])]))
+        bylab = _np.zeros([self.items.size])
+        for j in _np.arange(self.clusters.size):
+            bylab[self._aggregations[j]] = (j*_np.ones([len(self._aggregations[j])]))
         return bylab.astype(int)
 
     def as_dict(self):
@@ -74,5 +74,5 @@ class Aggregation:
         Returns a dictionary whose keys are from self.clusters
         and whose values are Groups corresponding to said clusters.
         """
-        return {self.clusters[k]:Group(self.items.elements[self._aggregations[k]],superset=self.items)
+        return {self.clusters[k]:_Group(self.items.elements[self._aggregations[k]],superset=self.items)
                 for k in self._aggregations.keys()}

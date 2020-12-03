@@ -1,9 +1,3 @@
-import numpy as np
-from tqdm import tqdm
-from stoclust import utils
-from stoclust import regulators
-from stoclust.Group import Group
-
 """
 stoclust.simulation
 
@@ -21,6 +15,10 @@ markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,max_ti
     for further details.
 
 """
+
+import numpy as _np
+from stoclust import regulators as _regulators
+from stoclust.Group import Group as _Group
 
 def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,max_time=100,tol=1e-6):
     """
@@ -88,22 +86,22 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,ma
                     The default is set to 100.
     """
     if group is None:
-        group = Group(np.arange(probs.shape[0]))
+        group = _Group(_np.arange(probs.shape[0]))
 
     if regulator is None:
         regulator = lambda t,ps,an,nd: (False,None,ps)
 
     if halt is None:
-        halt = lambda t,an,nd: regulators.halt_after_time(t,an,nd,max_time=max_time)
+        halt = lambda t,an,nd: _regulators.halt_after_time(t,an,nd,max_time=max_time)
 
     if initial is None:
-        initial_ind = np.random.choice(np.arange(probs.shape[0]))
+        initial_ind = _np.random.choice(_np.arange(probs.shape[0]))
     else:
         initial_ind = group.ind[initial]
     
     reports = []
     locations = []
-    node_data = np.zeros([probs.shape[0]])
+    node_data = _np.zeros([probs.shape[0]])
 
     t = 0
     current = initial_ind
@@ -114,11 +112,11 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,ma
     t += 1
 
     while not(halt(t,current,node_data)):
-        if np.sum(new_probs[current,:])<tol:
-            remaining = np.where(np.sum(new_probs,axis=0)>tol)[0]
-            sequel = np.random.choice(remaining)
+        if _np.sum(new_probs[current,:])<tol:
+            remaining = _np.where(_np.sum(new_probs,axis=0)>tol)[0]
+            sequel = _np.random.choice(remaining)
         else:
-            sequel = np.random.choice(np.arange(probs.shape[0]),p=new_probs[current,:])
+            sequel = _np.random.choice(_np.arange(probs.shape[0]),p=new_probs[current,:])
         
         will_report, report, new_probs = regulator(t,probs,sequel,node_data)
         if will_report:
@@ -128,4 +126,4 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,ma
         locations.append(group.elements[current])
         t += 1
     
-    return np.array(reports), np.array(locations)
+    return _np.array(reports), _np.array(locations)

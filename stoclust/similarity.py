@@ -1,10 +1,10 @@
-import numpy as np
-from stoclust import ensemble
+import numpy as _np
+from stoclust import ensemble as _ensemble
 
 def from_gram(g):
-    norms = np.diag(g)
-    return g/np.sqrt((norms[None,:]*norms[:,None]))
+    norms = _np.diag(g)
+    return g/_np.sqrt((norms[None,:]*norms[:,None]))
 
 def from_random_clustering(weights,**kwargs):
-    parisi_ensemble = ensemble.random_clustering(weights,**kwargs)
-    return np.average(parisi_ensemble,axis=0)
+    parisi_ensemble = _ensemble.random_clustering(weights,**kwargs)
+    return _np.average(parisi_ensemble,axis=0)

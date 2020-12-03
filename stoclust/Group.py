@@ -1,4 +1,4 @@
-import numpy as np
+import numpy as _np
 
 class Group:
     """
@@ -30,20 +30,20 @@ class Group:
     """
     def __init__(self,a,superset=None):
         if isinstance(a,list):
-            self.elements = (np.array(a))
+            self.elements = (_np.array(a))
         else:
             self.elements = (a)
         self.ind = {self.elements[i]:i for i in range(len(self.elements))}
         self.size = len(self.elements)
         self.in_superset = None
         if superset is not None:
-            self.in_superset = np.array([np.where(superset.elements==s)[0][0] for s in self.elements])
+            self.in_superset = _np.array([_np.where(superset.elements==s)[0][0] for s in self.elements])
 
     def set_super(self,superset):
-        self.in_superset = np.array([np.where(superset.elements==s)[0][0] for s in self.elements])
+        self.in_superset = _np.array([_np.where(superset.elements==s)[0][0] for s in self.elements])
 
     def __add__(self,other):
-        IDs = np.sort(np.array(list(set(list(self.elements)+list(other.elements)))))
+        IDs = _np.sort(_np.array(list(set(list(self.elements)+list(other.elements)))))
         new_group = Group(IDs)
         return new_group
     

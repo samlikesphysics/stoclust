@@ -1,13 +1,3 @@
-import numpy as np
-from tqdm import tqdm
-import scipy.linalg as la
-from functools import reduce
-from math import floor,ceil
-from stoclust import utils
-from stoclust.Group import Group
-from stoclust.Aggregation import Aggregation
-from stoclust import clustering
-
 """
 stoclust.ensemble
 
@@ -41,6 +31,13 @@ from_noise(vecs,noise_map,ensemble_size=100,show_progress=False):
 
 """
 
+import numpy as _np
+from tqdm import tqdm as _tqdm
+import scipy.linalg as _la
+from functools import reduce as _reduce
+from math import floor as _floor
+from math import ceil as _ceil
+
 def random_clustering(mat,clustering_method,ensemble_size=100,show_progress=False):
     """
     Given a matrix and a function describing a random clustering method, returns an ensemble of block matrices.
@@ -62,10 +59,10 @@ def random_clustering(mat,clustering_method,ensemble_size=100,show_progress=Fals
     block_mats :        A three-dimensional array whose first dimension indexes the ensemble trials, and whose remaining two indices have the shape of mat.
     """
     if show_progress:
-        ensemble_iter = tqdm(range(ensemble_size))
+        ensemble_iter = _tqdm(range(ensemble_size))
     else:
         ensemble_iter = range(ensemble_size)
-    return np.stack([clustering_method(mat).block_mat() for k in ensemble_iter])
+    return _np.stack([clustering_method(mat).block_mat() for k in ensemble_iter])
 
 def given_ensemble(mats,clustering_method,show_progress=False):
     """
@@ -86,10 +83,10 @@ def given_ensemble(mats,clustering_method,show_progress=False):
     block_mats :        A three-dimensional array the same shape as mat.
     """
     if show_progress:
-        ensemble_iter = tqdm(range(mats.shape[0]))
+        ensemble_iter = _tqdm(range(mats.shape[0]))
     else:
         ensemble_iter = range(mats.shape[0])
-    return np.stack([clustering_method(mats[j]).block_mat() for j in ensemble_iter])
+    return _np.stack([clustering_method(mats[j]).block_mat() for j in ensemble_iter])
 
 def smooth_block(block_mats,window=7,cutoff=0.5):
     """
@@ -110,15 +107,15 @@ def smooth_block(block_mats,window=7,cutoff=0.5):
     """
     height = block_mats.shape[0]
     width = block_mats.shape[1]
-    indices = reduce(lambda x,y:x+y,[[np.arange(max(0,j-floor(window/2)),
-                                                min(height,j+ceil(window/2)))[0],
-                                        np.arange(max(0,j-2),min(height,j+3))[-1]] for j in range(height)],[])
-    sums = np.add.reduceat(block_mats,indices,axis=0)[0::2]
-    nums = np.add.reduceat(np.ones([height]),indices,axis=0)[0::2]
-    bmats_avg = sums/np.outer(nums,np.ones([width,width])).reshape([height,width,width])
+    indices = _reduce(lambda x,y:x+y,[[_np.arange(max(0,j-_floor(window/2)),
+                                                min(height,j+_ceil(window/2)))[0],
+                                        _np.arange(max(0,j-2),min(height,j+3))[-1]] for j in range(height)],[])
+    sums = _np.add.reduceat(block_mats,indices,axis=0)[0::2]
+    nums = _np.add.reduceat(_np.ones([height]),indices,axis=0)[0::2]
+    bmats_avg = sums/_np.outer(nums,_np.ones([width,width])).reshape([height,width,width])
     upper = (bmats_avg>cutoff).astype(float)
-    new_bmats = np.stack([(la.expm(upper[j])>0).astype(float) for j in range(height)])
-    result = np.zeros([height,width,width])
+    new_bmats = _np.stack([(_la.expm(upper[j])>0).astype(float) for j in range(height)])
+    result = _np.zeros([height,width,width])
     result[-1] = new_bmats[-1]
     for j in range(height-1):
         result[height-j-2] = new_bmats[height-j-2]*result[height-j-1]
@@ -145,8 +142,8 @@ def from_noise(vecs,noise_map,ensemble_size=100,show_progress=False):
     vec_ens :           A three-dimensional array whose first dimension indexes the ensemble trials, and whose remaining two indices have the shape of vecs.
     """
     if show_progress:
-        vecs_iter = tqdm(range(vecs.shape[0]))
+        vecs_iter = _tqdm(range(vecs.shape[0]))
     else:
         vecs_iter = range(vecs.shape[0])
-    return np.moveaxis(np.stack([noise_map(vecs[k],ensemble_size) for k in vecs_iter]),
+    return _np.moveaxis(_np.stack([noise_map(vecs[k],ensemble_size) for k in vecs_iter]),
                        [0,1,2],[1,0,2])

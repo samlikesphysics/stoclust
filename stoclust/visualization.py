@@ -1,10 +1,3 @@
-import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
-from stoclust.Aggregation import Aggregation
-from stoclust.Group import Group
-from tqdm import tqdm
-
 """
 stoclust.visualization
 
@@ -47,6 +40,12 @@ dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
 
 """
 
+import numpy as _np
+import plotly.graph_objects as _go
+from stoclust.Aggregation import Aggregation as _Aggregation
+from stoclust.Group import Group as _Group
+from tqdm import tqdm as _tqdm
+
 def heatmap(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwargs):
     """
     Generates a heatmap of a given matrix: that is, displays the matrix as a table of colored blocks such that the colors correspond to matrix values.
@@ -74,25 +73,25 @@ def heatmap(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**
     fig :       A Plotly Figure containing the heatmap.
     """
     if show_x is None:
-        show_x = np.arange(mat.shape[1])
+        show_x = _np.arange(mat.shape[1])
     if show_y is None:
-        show_y = np.arange(mat.shape[0])
+        show_y = _np.arange(mat.shape[0])
     if xlabels is None:
-        xlabels = np.arange(mat.shape[1])
+        xlabels = _np.arange(mat.shape[1])
     if ylabels is None:
-        ylabels = np.arange(mat.shape[0])
+        ylabels = _np.arange(mat.shape[0])
 
-    fig = go.Figure(data=go.Heatmap(
+    fig = _go.Figure(data=_go.Heatmap(
                         z=mat[show_y][:,show_x],**kwargs))
     fig.update_layout(
         xaxis = dict(
             tickmode = 'array',
-            tickvals = np.arange(len(show_x)),
+            tickvals = _np.arange(len(show_x)),
             ticktext = xlabels[show_x]
         ),
         yaxis = dict(
             tickmode = 'array',
-            tickvals = np.arange(len(show_y)),
+            tickvals = _np.arange(len(show_y)),
             ticktext = ylabels[show_y]
         ),
         margin=dict(l=100, r=100, t=20, b=20),
@@ -134,9 +133,9 @@ def scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
     fig :           A Plotly Figure containing the scatter plot.
     """
     if agg is None:
-        agg = Aggregation(Group(np.arange(x.shape[0])),
-                          Group(np.array([0])),
-                          {0:np.arange(x.shape[0])})
+        agg = _Aggregation(_Group(_np.arange(x.shape[0])),
+                          _Group(_np.array([0])),
+                          {0:_np.arange(x.shape[0])})
     specific_keywords = [{} for i in range(agg.clusters.size)]
     for k,v in kwargs.items():
         if hasattr(v, '__len__') and not(isinstance(v,str)):
@@ -149,7 +148,7 @@ def scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
     if kwargs.get('name',None) is None:
         for i in range(agg.clusters.size):
             specific_keywords[i]['name'] = str(agg.clusters.elements[i])
-    fig = go.Figure(data=[go.Scatter3d(x=x[agg._aggregations[i]],
+    fig = _go.Figure(data=[_go.Scatter3d(x=x[agg._aggregations[i]],
                                        y=y[agg._aggregations[i]],
                                        z=z[agg._aggregations[i]],
                                        **(specific_keywords[i]))                   
@@ -185,9 +184,9 @@ def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
     fig :           A Plotly Figure containing the scatter plot.
     """
     if agg is None:
-        agg = Aggregation(Group(np.arange(x.shape[0])),
-                          Group(np.array([0])),
-                          {0:np.arange(x.shape[0])})
+        agg = _Aggregation(_Group(_np.arange(x.shape[0])),
+                          _Group(_np.array([0])),
+                          {0:_np.arange(x.shape[0])})
     specific_keywords = [{} for i in range(agg.clusters.size)]
     for k,v in kwargs.items():
         if hasattr(v, '__len__') and not(isinstance(v,str)):
@@ -204,7 +203,7 @@ def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
         for i in range(agg.clusters.size):
             specific_keywords[i]['name'] = str(agg.clusters.elements[i])
 
-    fig = go.Figure(data=[go.Scatter(x=x[agg._aggregations[i]],
+    fig = _go.Figure(data=[_go.Scatter(x=x[agg._aggregations[i]],
                                        y=y[agg._aggregations[i]],
                                        **(specific_keywords[i]))                   
                         for i in range(agg.clusters.size)])
@@ -239,18 +238,18 @@ def bars(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwa
     fig :       A Plotly Figure containing the stacked bars.
     """
     if show_x is None:
-        show_x = np.arange(mat.shape[0])
+        show_x = _np.arange(mat.shape[0])
     if show_y is None:
-        show_y = np.arange(mat.shape[1])
+        show_y = _np.arange(mat.shape[1])
     if xlabels is None:
-        xlabels = np.arange(mat.shape[0]).astype(str)
+        xlabels = _np.arange(mat.shape[0]).astype(str)
     if ylabels is None:
-        ylabels = np.arange(mat.shape[1]).astype(str)
+        ylabels = _np.arange(mat.shape[1]).astype(str)
 
     specific_keywords = [{} for i in range(mat.shape[1])]
     for k,v in kwargs.items():
         if hasattr(v, '__len__') and not(isinstance(v,str)):
-            if isinstance(v,np.ndarray):
+            if isinstance(v,_np.ndarray):
                 if len(v.shape)==2:
                     for i in range(mat.shape[1]):
                         specific_keywords[i][k] = v[k,i]
@@ -268,13 +267,13 @@ def bars(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwa
         for i in range(mat.shape[1]):
             specific_keywords[i]['width'] = 1 
 
-    fig = go.Figure(data=[
-        go.Bar(name=ylabels[o], x=xlabels, y=mat[show_x,o], **specific_keywords[o]) for o in show_y
+    fig = _go.Figure(data=[
+        _go.Bar(name=ylabels[o], x=xlabels, y=mat[show_x,o], **specific_keywords[o]) for o in show_y
     ])
     fig.update_layout(barmode='stack',
                     xaxis = dict(
                         tickmode = 'array',
-                        tickvals = np.arange(len(show_x)),
+                        tickvals = _np.arange(len(show_x)),
                         ticktext = (xlabels)[show_x]
                     ),)
 
@@ -311,22 +310,22 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
     """
     groups = hier.cluster_groups()
 
-    x_items = np.zeros([hier.items.size])
-    s_max = np.max(hier._scales)
+    x_items = _np.zeros([hier.items.size])
+    s_max = _np.max(hier._scales)
     top_agg = hier.at_scale(s_max)
     x_base = 0
     x_in_superset = []
     for c in range(top_agg.clusters.size):
         grp = top_agg._aggregations[c]
         n = len(grp)
-        x_items[grp] = np.arange(n)+x_base
+        x_items[grp] = _np.arange(n)+x_base
         x_base += n
         x_in_superset = x_in_superset + list(top_agg._aggregations[c])
-    x_in_superset = np.array(x_in_superset)
+    x_in_superset = _np.array(x_in_superset)
     
-    x_clusters = np.zeros([hier.clusters.size])
-    y_clusters = np.zeros([hier.clusters.size])
-    fig = go.Figure()
+    x_clusters = _np.zeros([hier.clusters.size])
+    y_clusters = _np.zeros([hier.clusters.size])
+    fig = _go.Figure()
 
     lineinfo = [{} for c in range(hier.clusters.size)]
     if line is None:
@@ -343,16 +342,16 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
                 for c in range(hier.clusters.size):
                     lineinfo[c][k] = v
     if show_progress:
-        clust_iter = tqdm(range(hier.clusters.size))
+        clust_iter = _tqdm(range(hier.clusters.size))
     else:
         clust_iter = range(hier.clusters.size)
     
     for c in clust_iter:
-        x_clusters[c] = np.average(x_items[groups[hier.clusters[c]].in_superset])
+        x_clusters[c] = _np.average(x_items[groups[hier.clusters[c]].in_superset])
         y_clusters[c] = hier._scales[c]
         if len(hier._children[c])>0:
-            xmin = np.min(x_clusters[hier._children[c]])
-            xmax = np.max(x_clusters[hier._children[c]])
+            xmin = _np.min(x_clusters[hier._children[c]])
+            xmax = _np.max(x_clusters[hier._children[c]])
             fig.add_shape(
                         # Line Horizontal
                         dict(
@@ -379,7 +378,7 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
         customdata=hier.clusters.elements
     if kwargs.get('hovertemplate',None) is None:
         hovertemplate = '<b>ID</b>: %{customdata} <br><b>Scale</b>: %{y} '
-    fig.add_trace(go.Scatter(x=x_clusters,y=y_clusters,
+    fig.add_trace(_go.Scatter(x=x_clusters,y=y_clusters,
                     mode='markers',
                     customdata=customdata, 
                     hovertemplate = hovertemplate,**kwargs))
@@ -390,7 +389,7 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
             yaxis_title=kwargs.get('y_axis_label','Scale'),
             xaxis = dict(
                 tickmode = 'array',
-                tickvals = np.arange(hier.items.size),
+                tickvals = _np.arange(hier.items.size),
                 ticktext = hier.items.elements[x_in_superset]
             ))
     fig.update_shapes(layer='below')

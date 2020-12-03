@@ -1,6 +1,3 @@
-import numpy as np
-from stoclust import utils
-
 """
 stoclust.regulators
 
@@ -68,6 +65,9 @@ halt_after_time(time,at_node,node_data,max_time=100):
 
 """
 
+import numpy as _np
+from stoclust import utils as _utils
+
 def node_removal_regulator(time,probs,at_node,node_data,max_visits=5):
     """
     Modifies transition probabilities by making it impossible to transition
@@ -76,11 +76,11 @@ def node_removal_regulator(time,probs,at_node,node_data,max_visits=5):
     When a node is removed, reports the ID of the removed node;
     otherwise, no report is made.
     """
-    old_ind = np.where(node_data>=max_visits)[0]
+    old_ind = _np.where(node_data>=max_visits)[0]
     node_data[at_node] += 1
-    new_ind = np.where(node_data>=max_visits)[0]
-    new_probs = utils.stoch(probs*((node_data<max_visits).astype(int)[None,:]))
-    updated = np.where(np.logical_not(np.isin(new_ind,old_ind)))[0]
+    new_ind = _np.where(node_data>=max_visits)[0]
+    new_probs = _utils.stoch(probs*((node_data<max_visits).astype(int)[None,:]))
+    updated = _np.where(_np.logical_not(_np.isin(new_ind,old_ind)))[0]
     
     if len(updated>0):
         return True, new_ind[updated[0]], new_probs
@@ -94,7 +94,7 @@ def halt_when_explored(time,at_node,node_data):
     does not work otherwise. Therefore, be careful to use
     with an appropriate regulator.
     """
-    return np.all(node_data>0)
+    return _np.all(node_data>0)
 
 def halt_after_time(time,at_node,node_data,max_time=100):
     """

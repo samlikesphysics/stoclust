@@ -1,7 +1,3 @@
-import numpy as np
-import scipy.linalg as la
-from functools import reduce
-
 """
 stoclust.utils
 
@@ -28,6 +24,9 @@ block_sum(a, blocks, axis=0):
     
 """
 
+import numpy as _np
+from functools import reduce as _reduce
+
 def stoch(weights,axis=-1):
     """
     Reweights each row along a given axis such that sums along that axis are one.
@@ -38,17 +37,17 @@ def stoch(weights,axis=-1):
         axes = [len(weights.shape)-1]
     else:
         axes = [axis]
-    shape = np.array(weights.shape)
+    shape = _np.array(weights.shape)
     all_axes = list(range(len(weights.shape)))
     other_axes = list(set(all_axes) - set(axes))
     reorg = axes + other_axes
-    new_weights = np.moveaxis(weights,reorg,all_axes)
+    new_weights = _np.moveaxis(weights,reorg,all_axes)
     new_targets = list(range(len(axes)))
-    sums = np.sum(new_weights,axis=tuple(new_targets))
+    sums = _np.sum(new_weights,axis=tuple(new_targets))
     prop_sums = sums + (sums==0).astype(int)
-    sums_full = np.outer(np.ones([np.prod(shape[(axes)])]),prop_sums).reshape(list(shape[(axes)])
+    sums_full = _np.outer(_np.ones([_np.prod(shape[(axes)])]),prop_sums).reshape(list(shape[(axes)])
                                                             +list(shape[(other_axes)]))
-    return np.moveaxis(new_weights/sums_full,all_axes,reorg)
+    return _np.moveaxis(new_weights/sums_full,all_axes,reorg)
 
 def sinkhorn_knopp(mat,num_iter=100,rescalings=False):
     """
@@ -66,15 +65,15 @@ def sinkhorn_knopp(mat,num_iter=100,rescalings=False):
     bistochastic matrix and, optionally, the diagonal weights
     of the rescaling matrices.
     """
-    dR = np.ones([mat.shape[1]])
-    dL = np.ones([mat.shape[0]])
+    dR = _np.ones([mat.shape[1]])
+    dL = _np.ones([mat.shape[0]])
     for j in range(num_iter):
-        dL = np.sum(mat@np.diag(dR),axis=1)**(-1)
-        dR = np.sum(np.diag(dL)@mat,axis=0)**(-1)
+        dL = _np.sum(mat@_np.diag(dR),axis=1)**(-1)
+        dR = _np.sum(_np.diag(dL)@mat,axis=0)**(-1)
     if rescalings:
-        return dL, np.diag(dL)@mat@np.diag(dR), dR
+        return dL, _np.diag(dL)@mat@_np.diag(dR), dR
     else:
-        return np.diag(dL)@mat@np.diag(dR)
+        return _np.diag(dL)@mat@_np.diag(dR)
 
 def block_sum(a, blocks, axis=0):
     """
@@ -86,14 +85,14 @@ def block_sum(a, blocks, axis=0):
     if axis==0:
         move_a = a.copy()
     else:
-        move_a = np.moveaxis(a,[0,axis],[axis,0])
-    order = reduce(lambda x,y:x+y, blocks,[])
+        move_a = _np.moveaxis(a,[0,axis],[axis,0])
+    order = _reduce(lambda x,y:x+y, blocks,[])
     order_a = move_a[order]
-    lengths = np.array([len(b) for b in blocks])
-    slices = np.concatenate([np.array([0]),np.cumsum(lengths)[:-1]])
-    red_a = np.add.reduceat(order_a,slices,axis=0)
+    lengths = _np.array([len(b) for b in blocks])
+    slices = _np.concatenate([_np.array([0]),_np.cumsum(lengths)[:-1]])
+    red_a = _np.add.reduceat(order_a,slices,axis=0)
     if axis==0:
         final_a = red_a.copy()
     else:
-        final_a = np.moveaxis(red_a,[0,axis],[axis,0])
+        final_a = _np.moveaxis(red_a,[0,axis],[axis,0])
     return final_a

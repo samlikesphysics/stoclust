@@ -1,7 +1,3 @@
-import numpy as np
-import scipy.special as sp
-from stoclust import gram
-
 """
 stoclust.distance
 
@@ -21,14 +17,14 @@ from_gram(g):
 
 kl_div(probs):
     Given a column-stochastic matrix (that is,
-    np.sum(probs,axis=1)=1), generates a square
+    _np.sum(probs,axis=1)=1), generates a square
     matrix of dimension probs.shape[0],
     whose i,j element is the KL divergence
     of probs[i] over probs[j].
 
 kl_div_cross(probs):
     Given a square column-stochastic matrix (that is,
-    np.sum(probs,axis=1)=1), generates a square
+    _np.sum(probs,axis=1)=1), generates a square
     matrix of dimension probs.shape[0],
     whose i,j component is the cross KL divergence
     of probs[i] over probs[j] (see this function's
@@ -36,22 +32,26 @@ kl_div_cross(probs):
 
 """
 
+import numpy as _np
+import scipy.special as _sp
+from stoclust import gram as _gram
+
 def kl_div(probs):
     """
     Given a column-stochastic matrix (that is,
-    np.sum(probs,axis=1)=1), generates a square
+    _np.sum(probs,axis=1)=1), generates a square
     matrix of dimension probs.shape[0],
     whose i,j element is the KL divergence
     of probs[i] over probs[j].
     """
-    dist = sp.kl_div(probs[:,None,:],probs[None,:,:])
-    return np.sum(dist,axis=-1)
+    dist = _sp.kl_div(probs[:,None,:],probs[None,:,:])
+    return _np.sum(dist,axis=-1)
 
 def euclid(vecs):
     """
     Given a set of vectors, determines the Euclidean distance between them.
     """
-    g = gram.from_vecs(vecs)
+    g = _gram.from_vecs(vecs)
     return from_gram(g)
 
 def from_gram(g):
@@ -59,13 +59,13 @@ def from_gram(g):
     Given a Gram matrix g, computes the corresponding
     distance of the basis vectors.
     """
-    norms = np.diag(g)
+    norms = _np.diag(g)
     return norms[None,:]+norms[:,None]-2*g
 
 def kl_div_cross(probs):
     """
     Given a square column-stochastic matrix (that is,
-    np.sum(probs,axis=1)=1), generates a square
+    _np.sum(probs,axis=1)=1), generates a square
     matrix of dimension probs.shape[0],
     whose i,j element is given by the formula
 
@@ -73,9 +73,9 @@ def kl_div_cross(probs):
              + probs[i,j] log(probs[i,j]/probs[j,i])
              + probs[i,i] log(probs[i,i]/probs[j,j])
     """
-    dist = sp.kl_div(probs[:,None,:],probs[None,:,:])
-    offdiags = sp.kl_div(probs,probs.T)
-    diags = sp.kl_div(np.diag(probs)[:,None],np.diag(probs)[None,:])
-    dist[np.arange(probs.shape[0]),:,np.arange(probs.shape[0])] = 0
-    dist[:,np.arange(probs.shape[0]),np.arange(probs.shape[0])] = 0
-    return np.sum(dist,axis=-1) + diags + offdiags
+    dist = _sp.kl_div(probs[:,None,:],probs[None,:,:])
+    offdiags = _sp.kl_div(probs,probs.T)
+    diags = _sp.kl_div(_np.diag(probs)[:,None],_np.diag(probs)[None,:])
+    dist[_np.arange(probs.shape[0]),:,_np.arange(probs.shape[0])] = 0
+    dist[:,_np.arange(probs.shape[0]),_np.arange(probs.shape[0])] = 0
+    return _np.sum(dist,axis=-1) + diags + offdiags

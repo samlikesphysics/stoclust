@@ -1,12 +1,3 @@
-import numpy as np
-import scipy.linalg as la
-from stoclust import utils
-from stoclust.Group import Group
-from stoclust.Aggregation import Aggregation
-from stoclust.Hierarchy import Hierarchy
-from stoclust import simulation
-from stoclust import regulators
-
 """
 stoclust.clustering
 
@@ -50,17 +41,28 @@ shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None)
     the spectral approach of Shi and Malik.
 
 fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None)
+
     Given a square stochastic matrix describing the strength
     of the relationship between pairs of items,
     determines an aggregation of the items using
     the regulated random walk approach of Fushing and McAssey.
 
 hier_from_blocks(block_mats,scales=None,group=None)
+
     Given a parameterized ensemble of block matrices, 
     each more coarse-grained than the last,
     constructs a corresponding Hierarchy object.
 
 """
+
+import numpy as _np
+import scipy.linalg as _la
+import stoclust.utils as _utils
+from stoclust.Group import Group as _Group
+from stoclust.Aggregation import Aggregation as _Aggregation
+from stoclust.Hierarchy import Hierarchy as _Hierarchy
+import stoclust.simulation as _simulation
+import stoclust.regulators as _regulators
 
 def split_by_gaps(vec,num_gaps = 1,group = None):
     """
@@ -84,16 +86,16 @@ def split_by_gaps(vec,num_gaps = 1,group = None):
     Aggregation of the indices of vec
     """
     if group is None:
-        group = Group(np.arange(len(vec)))
+        group = _Group(_np.arange(len(vec)))
 
-    sort_inds = np.argsort(vec)
-    gap_locs = np.flip(np.argsort(np.diff(vec[sort_inds])))[0:num_gaps]
-    ordered_gaps = np.sort(gap_locs)
+    sort_inds = _np.argsort(vec)
+    gap_locs = _np.flip(_np.argsort(_np.diff(vec[sort_inds])))[0:num_gaps]
+    ordered_gaps = _np.sort(gap_locs)
 
     agg_dict = {k+1:sort_inds[ordered_gaps[k]+1:ordered_gaps[k+1]+1] for k in range(0,num_gaps-1)}
     agg_dict.update({0:sort_inds[:ordered_gaps[0]+1],
                      num_gaps:sort_inds[ordered_gaps[-1]+1:]})
-    return Aggregation(group,Group(np.arange(num_gaps+1)),agg_dict)
+    return _Aggregation(group,_Group(_np.arange(num_gaps+1)),agg_dict)
 
 def split_by_quantiles(vec,quantiles=0.95,group = None):
     """
@@ -117,17 +119,17 @@ def split_by_quantiles(vec,quantiles=0.95,group = None):
     """
     num = len(vec)
     if group is None:
-        group = Group(np.arange(len(vec)))
+        group = _Group(_np.arange(len(vec)))
 
-    if not(isinstance(quantiles,np.ndarray)):
+    if not(isinstance(quantiles,_np.ndarray)):
         if isinstance(quantiles,list):
-            quantiles = np.array(quantiles)
+            quantiles = _np.array(quantiles)
         else:
-            quantiles = np.array([quantiles])
+            quantiles = _np.array([quantiles])
 
-    quantiles = quantiles[np.where(np.logical_and(quantiles>1/len(vec),quantiles<=1))]
+    quantiles = quantiles[_np.where(_np.logical_and(quantiles>1/len(vec),quantiles<=1))]
         
-    cuts = np.sort(vec)[(np.floor(quantiles*len(vec))-1).astype(int)]
+    cuts = _np.sort(vec)[(_np.floor(quantiles*len(vec))-1).astype(int)]
     return split_by_vals(vec,cuts=cuts,group=group)
 
 def split_by_vals(vec,cuts=0,group = None,tol=0):
@@ -151,26 +153,26 @@ def split_by_vals(vec,cuts=0,group = None,tol=0):
     Aggregation of the indices of vec
     """
     if group is None:
-        group = Group(np.arange(len(vec)))
+        group = _Group(_np.arange(len(vec)))
 
-    if not(isinstance(cuts,np.ndarray)):
+    if not(isinstance(cuts,_np.ndarray)):
         if isinstance(cuts,list):
-            cuts = np.array(cuts)
+            cuts = _np.array(cuts)
         else:
-            cuts = np.array([cuts])
+            cuts = _np.array([cuts])
     
-    cuts = cuts[np.where(np.logical_and(cuts>np.amin(vec),cuts<=np.amax(vec)))[0]]
+    cuts = cuts[_np.where(_np.logical_and(cuts>_np.amin(vec),cuts<=_np.amax(vec)))[0]]
 
     if len(cuts)==0:
-        return Aggregation(group,Group(np.array([0])),{0:np.arange(len(vec))})
+        return _Aggregation(group,_Group(_np.array([0])),{0:_np.arange(len(vec))})
     else:
-        agg_dict = {k+1:np.where(np.logical_and(vec >= cuts[k],
+        agg_dict = {k+1:_np.where(_np.logical_and(vec >= cuts[k],
                                                 vec < cuts[k+1]))[0]
                     for k in range(0,len(cuts)-1)}
-        agg_dict.update({0:np.where(vec < cuts[0])[0],
-                        len(cuts):np.where(vec >= cuts[len(cuts)-1])[0]})
+        agg_dict.update({0:_np.where(vec < cuts[0])[0],
+                        len(cuts):_np.where(vec >= cuts[len(cuts)-1])[0]})
 
-        return Aggregation(group,Group(np.arange(len(cuts)+1)),agg_dict)
+        return _Aggregation(group,_Group(_np.arange(len(cuts)+1)),agg_dict)
 
 def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = None):
     """
@@ -213,7 +215,7 @@ def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = Non
     min_times_same :    The number of iterations after which, if the clustering has not changed, the algorithm halts.
 
     vector_clustering : The particular method of vector clustering which should be used in the algorithm.
-                        Should receive a vector as the sole input and return an Aggregation.
+                        Should receive a vector as the sole i_nput and return an Aggregation.
 
     group :             The group which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
 
@@ -223,18 +225,18 @@ def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = Non
     """
     method = vector_clustering
     if group is None:
-        group = Group(np.arange(st_mat.shape[0]))
+        group = _Group(_np.arange(st_mat.shape[0]))
 
     if method is None:
-        eigs,vecs = la.eig(st_mat)
+        eigs,vecs = _la.eig(st_mat)
         eig_agg = split_by_gaps(eigs)
         k = len(eig_agg[1])
         if k>1:
             method = lambda v:split_by_gaps(v,num_gaps = k-1,group = group)
         else:
-            method = lambda v:Aggregation(group,Group(np.array([0])),{0:np.arange(len(group))})
+            method = lambda v:_Aggregation(group,_Group(_np.array([0])),{0:_np.arange(len(group))})
 
-    x = np.random.rand(st_mat.shape[0])
+    x = _np.random.rand(st_mat.shape[0])
     times_same = 1
     new_agg = method(x)
     by_cluster = method(x).by_cluster()
@@ -242,7 +244,7 @@ def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = Non
         x = st_mat@x
         new_agg = method(x)
         new_by_cluster = new_agg.by_cluster()
-        if np.all(new_by_cluster == by_cluster):
+        if _np.all(new_by_cluster == by_cluster):
             times_same += 1
         else:
             times_same = 1
@@ -308,22 +310,22 @@ def shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None):
     Aggregation of the indices of st_mat
     """
     if group is None:
-        group = Group(np.arange(st_mat.shape[0]))
+        group = _Group(_np.arange(st_mat.shape[0]))
 
     num_items = group.size
-    clusts = Aggregation(group,Group(np.array([0])),{0:np.arange(len(group))})
+    clusts = _Aggregation(group,_Group(_np.array([0])),{0:_np.arange(len(group))})
     change = True
     while change:
         new_clusts = []
         change = False
         for k,c in clusts:
             if len(c)>1:
-                T = utils.stoch(st_mat[np.ix_(c.in_superset,c.in_superset)])
-                eigs,evecs = la.eig(T)
-                einds = np.flip(np.argsort(np.abs(eigs)))
+                T = _utils.stoch(st_mat[_np.ix_(c.in_superset,c.in_superset)])
+                eigs,evecs = _la.eig(T)
+                einds = _np.flip(_np.argsort(_np.abs(eigs)))
                 if eigs[einds[1]]>eig_thresh:
-                    y = np.real(evecs[:,einds[1]])
-                    ind_agg = split_by_vals(y/np.sum(y),group=c,cuts=cut)
+                    y = _np.real(evecs[:,einds[1]])
+                    ind_agg = split_by_vals(y/_np.sum(y),group=c,cuts=cut)
                     if ind_agg.clusters.size>1:
                         new_clusts.append(c.in_superset[ind_agg[0].in_superset])
                         new_clusts.append(c.in_superset[ind_agg[1].in_superset])
@@ -338,7 +340,7 @@ def shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None):
                 new_clusts.append(c.in_superset)
 
         new_agg = {j:new_clusts[j] for j in range(len(new_clusts))}
-        clusts = Aggregation(group,Group(np.arange(len(new_clusts))),new_agg)
+        clusts = _Aggregation(group,_Group(_np.arange(len(new_clusts))),new_agg)
     return clusts
         
 def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
@@ -389,32 +391,32 @@ def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
     Aggregation of the indices of st_mat
     """
     if group is None:
-        group = Group(np.arange(st_mat.shape[0]))
+        group = _Group(_np.arange(st_mat.shape[0]))
 
-    reg = lambda t,ps,an,nd: regulators.node_removal_regulator(t,ps,an,nd,max_visits=max_visits)
-    hlt = lambda t,an,nd: regulators.halt_when_explored(t,an,nd)
-    reports, path = simulation.markov_random_walk(st_mat,regulator=reg,halt=hlt,group=group)
-    times = np.concatenate([np.array([reports[0,1]]),np.diff(reports[:,1])])
-    clust_times = reports[split_by_quantiles(times,quantiles=np.array([time_quantile_cutoff]))[1].in_superset,1]
+    reg = lambda t,ps,an,nd: _regulators.node_removal_regulator(t,ps,an,nd,max_visits=max_visits)
+    hlt = lambda t,an,nd: _regulators.halt_when_explored(t,an,nd)
+    reports, path = _simulation.markov_random_walk(st_mat,regulator=reg,halt=hlt,group=group)
+    times = _np.concatenate([_np.array([reports[0,1]]),_np.diff(reports[:,1])])
+    clust_times = reports[split_by_quantiles(times,quantiles=_np.array([time_quantile_cutoff]))[1].in_superset,1]
 
     if clust_times[0]>0:
-        clust_times = np.concatenate([np.array([0]),clust_times])
+        clust_times = _np.concatenate([_np.array([0]),clust_times])
     clusters = {j+group.size:[] for j in range(len(clust_times))}
     
     for k in group:
-        if k in np.unique(reports[:,0]):
-            block_counts = np.add.reduceat((path==k),clust_times)
-            props = block_counts/np.sum(block_counts)
-            if np.any(props>0.5):
-                clusters[np.where(props>0.5)[0][0]+group.size].append(group.ind[k])
+        if k in _np.unique(reports[:,0]):
+            block_counts = _np.add.reduceat((path==k),clust_times)
+            props = block_counts/_np.sum(block_counts)
+            if _np.any(props>0.5):
+                clusters[_np.where(props>0.5)[0][0]+group.size].append(group.ind[k])
             else:
                 clusters[group.ind[k]] = [group.ind[k]]
         else:
             clusters[group.ind[k]] = [group.ind[k]]
-    cluster_names = np.array([k for k in clusters.keys() if len(clusters[k])>0])
-    agg_dict = {j:np.array(clusters[cluster_names[j]]) 
+    cluster_names = _np.array([k for k in clusters.keys() if len(clusters[k])>0])
+    agg_dict = {j:_np.array(clusters[cluster_names[j]]) 
                 for j in range(len(cluster_names))}
-    return Aggregation(group,Group(cluster_names),agg_dict)
+    return _Aggregation(group,_Group(cluster_names),agg_dict)
 
 def hier_from_blocks(block_mats,scales=None,group=None):
     """
@@ -436,16 +438,16 @@ def hier_from_blocks(block_mats,scales=None,group=None):
     Hierarchy of the indices of block_mats.shape[1]
     """
     if group is None:
-        group = Group(np.arange(block_mats.shape[1]))
+        group = _Group(_np.arange(block_mats.shape[1]))
     if scales is None:
-        scales = np.arange(block_mats.shape[0])
+        scales = _np.arange(block_mats.shape[0])
 
-    current_agg = Aggregation(group,Group(np.arange(group.size)),{j:np.array([j]) for j in range(group.size)})
+    current_agg = _Aggregation(group,_Group(_np.arange(group.size)),{j:_np.array([j]) for j in range(group.size)})
     new_block_mats = block_mats.copy()
     cluster_children = {}
     proper_clusters = 0
     for j in range(block_mats.shape[0]):
-        st_mat = utils.stoch(new_block_mats[j])
+        st_mat = _utils.stoch(new_block_mats[j])
         agg = shi_malik(st_mat,eig_thresh=0.99,group=current_agg.clusters,cut=1e-6)
         new_agg_dict = {}
         new_agg_names = []
@@ -462,15 +464,15 @@ def hier_from_blocks(block_mats,scales=None,group=None):
                 new_agg_dict[num_clusters] = c.in_superset
                 new_agg_names.append(c[0])
                 num_clusters += 1
-        new_agg = Aggregation(current_agg.clusters,
-                              Group(np.array(new_agg_names)),
+        new_agg = _Aggregation(current_agg.clusters,
+                              _Group(_np.array(new_agg_names)),
                               new_agg_dict)
 
         blocks = [list(new_agg[new_agg.clusters[k]].in_superset) for k in range(new_agg.clusters.size)]
-        new_block_mats = (utils.block_sum(utils.block_sum(new_block_mats,blocks,axis=1),
+        new_block_mats = (_utils.block_sum(_utils.block_sum(new_block_mats,blocks,axis=1),
                                           blocks,axis=2)>0).astype(float)
         current_agg = new_agg
 
-    labels = Group(np.array(list(group.elements)+list(cluster_children.keys())))
+    labels = _Group(_np.array(list(group.elements)+list(cluster_children.keys())))
 
-    return Hierarchy(group,labels,cluster_children)
+    return _Hierarchy(group,labels,cluster_children)
