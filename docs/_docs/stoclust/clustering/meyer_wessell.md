@@ -49,6 +49,69 @@ enough number of iterations, it is returned as the final Aggregation.
 | `vector_clustering` | Keyword | `function` | The particular method of vector clustering which should be used in the algorithm. Should receive a vector as the sole input and return an Aggregation. |
 | `group` | Keyword | `Group` | The group which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
 
+## Example
+
+First we will generate a sample dataset
+with two touching circles:
+
+{% highlight python %}
+import stoclust.visualization as viz
+import stoclust as sc
+import numpy as np
+
+n = 500
+
+samples = np.concatenate([
+    sc.examples.gen_disk(num_samples=n,rad1=0,rad2=1),
+    sc.examples.gen_disk(num_samples=n,rad1=0,rad2=1)+
+    np.array([2,0])
+])
+
+agg = sc.Aggregation(
+    sc.Group(np.arange(samples.shape[0])),
+    sc.Group(['Left','Right']),
+    {
+        0:np.arange(0,n),
+        1:np.arange(n,2*n)
+    }
+)
+{% endhighlight %}
+<iframe
+  src="/stoclust/assets/html/clustering/disks.html"
+  style="width:100%; height:215px;"
+></iframe><br>
+
+Next, we apply the Meyer-Wessell algorithm
+with `min_times_same = 20`. It experiences 
+confusion at the boundary but otherwise
+identifies the two dominant structures.
+
+{% highlight python %}
+dist = sc.distance.euclid(samples)
+
+T = sc.utils.stoch(
+    np.exp(-dist/0.05) - np.eye(dist.shape[0])
+)
+
+new_agg = clust.meyer_wessell(T,min_times_same=20)
+
+fig = viz.scatter2D(
+    samples[:,0],samples[:,1],
+    agg=new_agg, mode='markers',
+    text=new_agg.items.elements.astype(str),
+    hoverinfo='text,name',
+    layout = {
+        'margin':dict(l=10, r=10, t=10, b=10)
+    }
+)
+
+fig.show()
+{% endhighlight %}
+<iframe
+  src="/stoclust/assets/html/clustering/meyer_wessell.html"
+  style="width:100%; height:215px;"
+></iframe>
+
 ## Reference
 
 Meyer, Carl D. and Charles D. Wessell. “Stochastic Data Clustering.” SIAM J. Matrix Analysis and Application 33-4: 1214-1236. 2012, [doi: 10.1137/100804395](https://epubs.siam.org/doi/abs/10.1137/100804395).

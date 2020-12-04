@@ -59,6 +59,99 @@ is returned as an `Aggregation`.
 | `cut` | Keyword | `float` | The value used to "cut" the subleading eigenvector into two clusters. |
 | `group` | Keyword | `Group` | The group which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
 
+## Example
+
+First we will generate a sample dataset
+with two touching circles:
+
+{% highlight python %}
+import stoclust.visualization as viz
+import stoclust as sc
+import numpy as np
+
+n = 500
+
+samples = np.concatenate([
+    sc.examples.gen_disk(num_samples=n,rad1=0,rad2=1),
+    sc.examples.gen_disk(num_samples=n,rad1=0,rad2=1)+
+    np.array([2,0])
+])
+
+agg = sc.Aggregation(
+    sc.Group(np.arange(samples.shape[0])),
+    sc.Group(['Left','Right']),
+    {
+        0:np.arange(0,n),
+        1:np.arange(n,2*n)
+    }
+)
+{% endhighlight %}
+<iframe
+  src="/stoclust/assets/html/clustering/disks2.html"
+  style="width:100%; height:215px;"
+></iframe><br>
+
+Next, we apply the Shi-Malik algorithm
+with `eig_thresh = 0.98`. This results
+in a crisp division into two circles.
+
+{% highlight python %}
+dist = sc.distance.euclid(samples)
+
+T = sc.utils.stoch(
+    np.exp(-dist/0.05) - np.eye(dist.shape[0])
+)
+
+new_agg = clust.shi_malik(T,eig_thresh=0.98)
+
+fig = viz.scatter2D(
+    samples[:,0],samples[:,1],
+    agg=new_agg, mode='markers',
+    text=new_agg.items.elements.astype(str),
+    hoverinfo='text,name',
+    layout = {
+        'margin':dict(l=10, r=10, t=10, b=10)
+    }
+)
+
+fig.show()
+{% endhighlight %}
+<iframe
+  src="/stoclust/assets/html/clustering/shi_malik_1.html"
+  style="width:100%; height:215px;"
+></iframe><br>
+
+However, note that lowering the threshold
+even a little to `0.95` results in the appearance
+of spurious sub-clusters:
+
+{% highlight python %}
+dist = sc.distance.euclid(samples)
+
+T = sc.utils.stoch(
+    np.exp(-dist/0.05) - np.eye(dist.shape[0])
+)
+
+# Note the new value of eig_thresh!
+new_agg = clust.shi_malik(T,eig_thresh=0.95)
+
+fig = viz.scatter2D(
+    samples[:,0],samples[:,1],
+    agg=new_agg, mode='markers',
+    text=new_agg.items.elements.astype(str),
+    hoverinfo='text,name',
+    layout = {
+        'margin':dict(l=10, r=10, t=10, b=10)
+    }
+)
+
+fig.show()
+{% endhighlight %}
+<iframe
+  src="/stoclust/assets/html/clustering/shi_malik_0.html"
+  style="width:100%; height:215px;"
+></iframe>
+
 ## Reference
 
 Jianbo Shi and J. Malik, "Normalized cuts and image segmentation," in *IEEE Transactions on Pattern Analysis and Machine Intelligence*, vol. 22, no. 8, pp. 888-905, Aug. 2000, [doi: 10.1109/34.868688](https://ieeexplore.ieee.org/document/868688).
