@@ -142,6 +142,9 @@ def scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
             if len(v)==len(agg.clusters):
                 for i in range(agg.clusters.size):
                     specific_keywords[i][k] = v[i]
+            elif len(v)==len(agg.items):
+                for i in range(agg.clusters.size):
+                    specific_keywords[i][k] = v[agg._aggregations[i]]
         else:
             for i in range(agg.clusters.size):
                 specific_keywords[i][k] = v
@@ -189,6 +192,8 @@ def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
         agg = _Aggregation(_Group(_np.arange(x.shape[0])),
                           _Group(_np.array([0])),
                           {0:_np.arange(x.shape[0])})
+
+
     specific_keywords = [{} for i in range(agg.clusters.size)]
     for k,v in kwargs.items():
         if hasattr(v, '__len__') and not(isinstance(v,str)):
