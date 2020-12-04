@@ -1,4 +1,5 @@
 import numpy as _np
+from functools import reduce as _reduce
 from stoclust.Group import Group as _Group
 
 class Aggregation:
@@ -38,10 +39,18 @@ class Aggregation:
 
     def __iter__(self):
         return iter(self.as_dict().items())
+
+    def __str__(self):
+        return 'Aggregation('+str({self.clusters[k]:self.items[v] for k,v in self._aggregations.items()})+')'
     
     def __repr__(self):
-        return 'Aggregation('+str({self.clusters[k]:self.items[v] for k,v in self._aggregations.items()})+')'
-
+        string =  'Aggregation(\n'+_reduce(
+            lambda x,y:x+y,
+            [
+                '\t'+str(c)+':\t'+str(v)+'\n' for c,v in self.__iter__()
+            ]
+        ) + ')'
+        return string
     def __getitem__(self,key):
         return _Group(self.items.elements[self._aggregations[self.clusters.ind[key]]],superset=self.items)
 
