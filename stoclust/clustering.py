@@ -6,7 +6,7 @@ motivated by stochastic analysis.
 
 Functions
 ---------
-split_by_gaps(vec,num_gaps = 1,group = None)
+split_by_gaps(vec,num_gaps = 1,index = None)
 
     Aggregates the indices of a vector 
     based on gaps between index values.
@@ -14,40 +14,40 @@ split_by_gaps(vec,num_gaps = 1,group = None)
     and the largest num_gaps gaps in the sorted array
     are used to cluster values.
 
-split_by_quantiles(vec,quantiles=0.95,group = None)
+split_by_quantiles(vec,quantiles=0.95,index = None)
 
     Like split_by_vals, but cuts the vector at specific quantiles
     rather than rigid values. Assumes right-continuity of the 
     cumulative distribution function.
 
-split_by_vals(vec,cuts=0,group = None,tol=0)
+split_by_vals(vec,cuts=0,index = None,tol=0)
 
     Aggregates the indices of a vector based on specified
     values at which to cut the sorted array. Assumes the
     right-continuity of the cumulative distribution function.
 
-meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = None)
+meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,index = None)
 
     Given a column-stochastic matrix describing the strength
     of the relationship between pairs of items,
     determines an aggregation of the items using the dynamical
     approach of Meyer and Wessell.
 
-shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None)
+shi_malik(st_mat,eig_thresh=0.95,cut=0,index=None)
 
     Given a stochastic matrix describing the strength
     of the relationship between pairs of items,
     determines an aggregation of the items using
     the spectral approach of Shi and Malik.
 
-fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None)
+fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,index=None)
 
     Given a square stochastic matrix describing the strength
     of the relationship between pairs of items,
     determines an aggregation of the items using
     the regulated random walk approach of Fushing and McAssey.
 
-hier_from_blocks(block_mats,scales=None,group=None)
+hier_from_blocks(block_mats,scales=None,index=None)
 
     Given a parameterized ensemble of block matrices, 
     each more coarse-grained than the last,
@@ -56,15 +56,15 @@ hier_from_blocks(block_mats,scales=None,group=None)
 """
 
 import numpy as _np
+import pandas as _pd
 import scipy.linalg as _la
 import stoclust.utils as _utils
-from stoclust.Group import Group as _Group
 from stoclust.Aggregation import Aggregation as _Aggregation
 from stoclust.Hierarchy import Hierarchy as _Hierarchy
 import stoclust.simulation as _simulation
 import stoclust.regulators as _regulators
 
-def split_by_gaps(vec,num_gaps = 1,group = None):
+def split_by_gaps(vec,num_gaps = 1,index = None):
     """
     Aggregates the indices of a vector based on gaps between index values.
     The number of gaps is specified by num_gaps,
@@ -79,14 +79,14 @@ def split_by_gaps(vec,num_gaps = 1,group = None):
     -----------------
     num_gaps :  The number of gaps to use to break vec into clusters.
 
-    group :     The group which labels the indices of vec, and which will be the item set of the returned Aggregation.
+    index :     The index which labels the indices of vec, and which will be the item set of the returned Aggregation.
 
     Output
     ------
     Aggregation of the indices of vec
     """
-    if group is None:
-        group = _Group(_np.arange(len(vec)))
+    if index is None:
+        index = _pd.Index(_np.arange(len(vec)))
 
     sort_inds = _np.argsort(vec)
 
@@ -106,9 +106,9 @@ def split_by_gaps(vec,num_gaps = 1,group = None):
         0:sort_inds[:ordered_gaps[0]+1],
         num_gaps:sort_inds[ordered_gaps[-1]+1:]
     })
-    return _Aggregation(group,_Group(_np.arange(num_gaps+1)),agg_dict)
+    return _Aggregation(index,_pd.Index(_np.arange(num_gaps+1)),agg_dict)
 
-def split_by_quantiles(vec,quantiles=0.95,group = None):
+def split_by_quantiles(vec,quantiles=0.95,index = None):
     """
     Like split_by_vals, but cuts the vector at specific quantiles
     rather than rigid values. Assumes right-continuity of the 
@@ -122,15 +122,15 @@ def split_by_quantiles(vec,quantiles=0.95,group = None):
     -----------------
     quantiles : A single value or list/array of quantiles which will be used to divide the vector components.
 
-    group :     The group which labels the indices of vec, and which will be the item set of the returned Aggregation.
+    index :     The index which labels the indices of vec, and which will be the item set of the returned Aggregation.
 
     Output
     ------
     Aggregation of the indices of vec
     """
     num = len(vec)
-    if group is None:
-        group = _Group(_np.arange(len(vec)))
+    if index is None:
+        index = _pd.Index(_np.arange(len(vec)))
 
     if not(isinstance(quantiles,_np.ndarray)):
         if isinstance(quantiles,list):
@@ -147,9 +147,9 @@ def split_by_quantiles(vec,quantiles=0.95,group = None):
         axis=1
     )
 
-    return split_by_vals(vec,cuts=cuts,group=group)
+    return split_by_vals(vec,cuts=cuts,index=index)
 
-def split_by_vals(vec,cuts=0,group = None,tol=0):
+def split_by_vals(vec,cuts=0,index = None,tol=0):
     """
     Aggregates the indices of a vector based on specified
     values at which to cut the sorted array. Assumes the
@@ -163,14 +163,14 @@ def split_by_vals(vec,cuts=0,group = None,tol=0):
     -----------------
     cuts :  A single value or list/array of values which will be used to divide the vector components.
 
-    group : The group which labels the indices of vec, and which will be the item set of the returned Aggregation.
+    index : The index which labels the indices of vec, and which will be the item set of the returned Aggregation.
 
     Output
     ------
     Aggregation of the indices of vec
     """
-    if group is None:
-        group = _Group(_np.arange(len(vec)))
+    if index is None:
+        index = _pd.Index(_np.arange(len(vec)))
 
     if not(isinstance(cuts,_np.ndarray)):
         if isinstance(cuts,list):
@@ -189,8 +189,8 @@ def split_by_vals(vec,cuts=0,group = None,tol=0):
 
     if len(cuts)==0:
         return _Aggregation(
-            group,
-            _Group(_np.array([0])),
+            index,
+            _pd.Index(_np.array([0])),
             {0:_np.arange(len(vec))}
         )
     else:
@@ -209,12 +209,12 @@ def split_by_vals(vec,cuts=0,group = None,tol=0):
         })
 
         return _Aggregation(
-            group,
-            _Group(_np.arange(len(cuts)+1)),
+            index,
+            _pd.Index(_np.arange(len(cuts)+1)),
             agg_dict
         )
 
-def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = None):
+def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,index = None):
     """
     Given a column-stochastic matrix describing the strength
     of the relationship between pairs of items,
@@ -257,15 +257,15 @@ def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = Non
     vector_clustering : The particular method of vector clustering which should be used in the algorithm.
                         Should receive a vector as the sole i_nput and return an Aggregation.
 
-    group :             The group which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
+    index :             The index which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
 
     Output
     ------
     Aggregation of the indices of st_mat
     """
     method = vector_clustering
-    if group is None:
-        group = _Group(_np.arange(st_mat.shape[0]))
+    if index is None:
+        index = _pd.Index(_np.arange(st_mat.shape[0]))
 
     if method is None:
         eigs,vecs = _la.eig(st_mat)
@@ -273,13 +273,13 @@ def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = Non
         k = len(eig_agg[1])
         if k>1:
             method = lambda v:split_by_gaps(
-                v,num_gaps = k-1,group = group
+                v,num_gaps = k-1,index = index
             )
         else:
             method = lambda v:_Aggregation(
-                group,
-                _Group(_np.array([0])),
-                {0:_np.arange(len(group))}
+                index,
+                _pd.Index(_np.array([0])),
+                {0:_np.arange(len(index))}
             )
 
     x = _np.random.rand(st_mat.shape[0])
@@ -298,7 +298,7 @@ def meyer_wessell(st_mat,min_times_same = 5,vector_clustering = None,group = Non
 
     return new_agg
     
-def shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None):
+def shi_malik(st_mat,eig_thresh=0.95,cut=0,index=None):
     """
     Given a stochastic matrix describing the strength
     of the relationship between pairs of items,
@@ -350,20 +350,20 @@ def shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None):
 
     cut :           The value used to "cut" the subleading eigenvector into two clusters.
 
-    group :         The group which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
+    index :         The index which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
 
     Output
     ------
     Aggregation of the indices of st_mat
     """
-    if group is None:
-        group = _Group(_np.arange(st_mat.shape[0]))
+    if index is None:
+        index = _pd.Index(_np.arange(st_mat.shape[0]))
 
-    num_items = group.size
+    num_items = len(index)
     clusts = _Aggregation(
-        group,
-        _Group(_np.array([0])),
-        {0:_np.arange(len(group))}
+        index,
+        _pd.Index(_np.array([0])),
+        {0:_np.arange(len(index))}
     )
     change = True
     while change:
@@ -372,35 +372,35 @@ def shi_malik(st_mat,eig_thresh=0.95,cut=0,group=None):
         for k,c in clusts:
             if len(c)>1:
                 T = _utils.stoch(st_mat[
-                    _np.ix_(c.in_superset,c.in_superset)
+                    _np.ix_(index.get_indexer(c),index.get_indexer(c))
                 ])
                 eigs,evecs = _la.eig(T)
                 einds = _np.flip(_np.argsort(_np.abs(eigs)))
                 if eigs[einds[1]]>eig_thresh:
                     y = _np.real(evecs[:,einds[1]])
-                    ind_agg = split_by_vals(y/_np.sum(y),group=c,cuts=cut)
-                    if ind_agg.clusters.size>1:
-                        new_clusts.append(c.in_superset[ind_agg[0].in_superset])
-                        new_clusts.append(c.in_superset[ind_agg[1].in_superset])
+                    ind_agg = split_by_vals(y/_np.sum(y),index=c,cuts=cut)
+                    if len(ind_agg.clusters)>1:
+                        new_clusts.append(index.get_indexer(ind_agg[0]))
+                        new_clusts.append(index.get_indexer(ind_agg[1]))
                     else:
-                        ind_agg = split_by_gaps(y,group=c)
-                        new_clusts.append(c.in_superset[ind_agg[0].in_superset])
-                        new_clusts.append(c.in_superset[ind_agg[1].in_superset])
+                        ind_agg = split_by_gaps(y,index=c)
+                        new_clusts.append(index.get_indexer(ind_agg[0]))
+                        new_clusts.append(index.get_indexer(ind_agg[1]))
                     change = True
                 else:
-                    new_clusts.append(c.in_superset)
+                    new_clusts.append(index.get_indexer(c))
             else:
-                new_clusts.append(c.in_superset)
+                new_clusts.append(index.get_indexer(c))
 
         new_agg = {j:new_clusts[j] for j in range(len(new_clusts))}
         clusts = _Aggregation(
-            group,
-            _Group(_np.arange(len(new_clusts))),
+            index,
+            _pd.Index(_np.arange(len(new_clusts))),
             new_agg
         )
     return clusts
         
-def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
+def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,index=None):
     """
     Given a square stochastic matrix describing the strength
     of the relationship between pairs of items,
@@ -441,14 +441,14 @@ def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
 
     time_quantile_cutoff :  The quantile of the length of time between node removals, which is used to determine the number of clusters.
 
-    group :                 The group which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
+    index :                 The index which labels the indices of st_mat, and which will be the item set of the returned Aggregation.
 
     Output
     ------
     Aggregation of the indices of st_mat
     """
-    if group is None:
-        group = _Group(_np.arange(st_mat.shape[0]))
+    if index is None:
+        index = _pd.Index(_np.arange(st_mat.shape[0]))
 
     reg = lambda t,ps,an,nd: _regulators.node_removal_regulator(
         t,ps,an,nd,
@@ -463,16 +463,16 @@ def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
         st_mat,
         regulator=reg,
         halt=hlt,
-        group=group
+        index=index
     )
 
     if len(reports)==0:
         return _Aggregation(
-            group,
-            group,
+            index,
+            index,
             {
                 j:_np.array([j]) 
-                for j in _np.arange(group.size)
+                for j in _np.arange(len(index))
             }
         )
     else:
@@ -485,28 +485,28 @@ def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
             split_by_quantiles(
                 -times,
                 quantiles=_np.array([1-time_quantile_cutoff])
-            )[0].in_superset,1
+            )[0].to_numpy(),1
         ]
 
         if clust_times[0]>0:
             clust_times = _np.concatenate([_np.array([0]),clust_times])
         clusters = {
-            j+group.size:[] 
+            j+len(index):[] 
             for j in range(len(clust_times))
         }
         
-        for k in group:
+        for k in index:
             if k in _np.unique(reports[:,0]):
                 block_counts = _np.add.reduceat((path==k),clust_times)
                 props = block_counts/_np.sum(block_counts)
                 if _np.any(props>0.5):
                     clusters[
-                        _np.where(props>0.5)[0][0]+group.size
-                    ].append(group.ind[k])
+                        _np.where(props>0.5)[0][0]+len(index)
+                    ].append(index.get_loc(k))
                 else:
-                    clusters[group.ind[k]] = [group.ind[k]]
+                    clusters[index.get_loc(k)] = [index.get_loc(k)]
             else:
-                clusters[group.ind[k]] = [group.ind[k]]
+                clusters[index.get_loc(k)] = [index.get_loc(k)]
 
         cluster_names = _np.array(
             [k for k in clusters.keys() if len(clusters[k])>0]
@@ -518,12 +518,12 @@ def fushing_mcassey(st_mat,max_visits=5,time_quantile_cutoff=0.95,group=None):
         }
 
         return _Aggregation(
-            group,
-            _Group(cluster_names),
+            index,
+            _pd.Index(cluster_names),
             agg_dict
         )
 
-def hier_from_blocks(block_mats,scales=None,group=None):
+def hier_from_blocks(block_mats,scales=None,index=None):
     """
     Given a parameterized ensemble of block matrices, each more coarse-grained than the last,
     constructs a corresponding Hierarchy object.
@@ -536,21 +536,21 @@ def hier_from_blocks(block_mats,scales=None,group=None):
     -----------------
     scales :        A one-dimensional monotonically increasing array, giving a scale parameter for each ensemble
 
-    group :         The group which labels the indices of block_mats.shape[1], and which will be the item set of the returned Aggregation.
+    index :         The index which labels the indices of block_mats.shape[1], and which will be the item set of the returned Aggregation.
 
     Output
     ------
     Hierarchy of the indices of block_mats.shape[1]
     """
-    if group is None:
-        group = _Group(_np.arange(block_mats.shape[1]))
+    if index is None:
+        index = _pd.Index(_np.arange(block_mats.shape[1]))
     if scales is None:
         scales = _np.arange(block_mats.shape[0])
 
     current_agg = _Aggregation(
-        group,
-        _Group(_np.arange(group.size)),
-        {j:_np.array([j]) for j in range(group.size)}
+        index,
+        _pd.Index(_np.arange(len(index))),
+        {j:_np.array([j]) for j in range(len(index))}
     )
     new_block_mats = block_mats.copy()
     cluster_children = {}
@@ -560,35 +560,35 @@ def hier_from_blocks(block_mats,scales=None,group=None):
         agg = shi_malik(
             st_mat,
             eig_thresh=0.99,
-            group=current_agg.clusters,
+            index=current_agg.clusters,
             cut=1e-6
         )
         new_agg_dict = {}
         new_agg_names = []
         num_clusters = 0
         for k,c in agg:
-            if c.size>1:
-                cluster_children[proper_clusters+group.size] = (
+            if len(c)>1:
+                cluster_children[proper_clusters+len(index)] = (
                     scales[j],
-                    current_agg.clusters.elements[c.in_superset]
+                    current_agg.clusters.to_numpy()[current_agg.clusters.get_indexer(c)]
                 )
-                new_agg_dict[num_clusters] = c.in_superset
-                new_agg_names.append(proper_clusters+group.size)
+                new_agg_dict[num_clusters] = current_agg.clusters.get_indexer(c)
+                new_agg_names.append(proper_clusters+len(index))
                 proper_clusters += 1
                 num_clusters += 1
             else:
-                new_agg_dict[num_clusters] = c.in_superset
+                new_agg_dict[num_clusters] = current_agg.clusters.get_indexer(c)
                 new_agg_names.append(c[0])
                 num_clusters += 1
         new_agg = _Aggregation(
             current_agg.clusters,
-            _Group(_np.array(new_agg_names)),
+            _pd.Index(_np.array(new_agg_names)),
             new_agg_dict
         )
 
         blocks = [
-            list(new_agg[new_agg.clusters[k]].in_superset) 
-            for k in range(new_agg.clusters.size)
+            list(current_agg.clusters.get_indexer(new_agg[new_agg.clusters[k]]) )
+            for k in range(len(new_agg.clusters))
         ]
         new_block_mats = (
             _utils.block_sum(
@@ -603,13 +603,13 @@ def hier_from_blocks(block_mats,scales=None,group=None):
         ).astype(float)
         current_agg = new_agg
 
-    labels = _Group(_np.array(
-        list(group.elements)+
+    labels = _pd.Index(_np.array(
+        list(index.to_numpy())+
         list(cluster_children.keys())
     ))
 
     return _Hierarchy(
-        group,
+        index,
         labels,
         cluster_children
     )

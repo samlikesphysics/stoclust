@@ -1,6 +1,6 @@
 import numpy as _np
-from stoclust.Group import Group as _Group
 from stoclust.Aggregation import Aggregation as _Aggregation
+import pandas as _pd
 from functools import reduce as _reduce
 
 class Hierarchy:
@@ -8,7 +8,7 @@ class Hierarchy:
     A class for describing a hierarchical clustering.
 
     Hierarchies are defined by three primary attributes:
-    their Group of items, their Group of cluster clusters,
+    their Index of items, their Index of cluster clusters,
     and a dictionary whose keys are cluster indices and whose
     values are tuples. The first element of the tuple is a scale
     parameter which must increase from subset to superset,
@@ -18,7 +18,7 @@ class Hierarchy:
     Attributes that can be obtained are self.items and self.clusters.
     Hierarchies act like dictionaries in that the cluster clusters
     may be called as indices. That is, for a Hierarchy H, and cluster c,
-    H[c] results in a Group containing all items under cluster c.
+    H[c] results in a Index containing all items under cluster c.
     When treated as an iterator, H returns tuples of the form (c,H[c]),
     much like the dictionary items() iterator.
     The length of a Hierarchy, len(H), is the number of distinct clusters.
@@ -31,7 +31,7 @@ class Hierarchy:
     cluster_groups:         Returns a dictionary where keys are cluster labels and
                             the values are all items under the key cluster.
 
-    clusters_containing:    Returns a Group containing all cluster labels for clusters
+    clusters_containing:    Returns an Index containing all cluster labels for clusters
                             that contain the given items.
 
     at_scale:               Returns the aggregation corresponding to the coarsest
@@ -57,7 +57,7 @@ class Hierarchy:
         self.items = items_group
         self.clusters = cluster_group
         self._children = {k:v[1] for k,v in cluster_children.items()}
-        self._children.update({cluster_group.ind[j]:[] for j in items_group})
+        self._children.update({cluster_group.get_loc(j):[] for j in items_group})
 
         self._scales = _np.zeros([self.clusters.size])
         self._scales[self.items.size:] = _np.array([cluster_children[k][0] 
@@ -81,7 +81,7 @@ class Hierarchy:
         Returns a dictionary where keys are cluster labels and
         the values are the immediate child clusters.
         """
-        return  {self.clusters[k]:_Group(self.clusters.elements[self._children[k]],superset=self.clusters)
+        return  {self.clusters[k]:_pd.Index(self.clusters[self._children[k]])
                  for k in self._children.keys()}
 
     def cluster_groups(self):
@@ -105,9 +105,9 @@ class Hierarchy:
                         else:
                             new_final_items = new_final_items + [l]
                     final_items = new_final_items
-                C_groups[self.clusters[k]] = _Group(self.items[_np.array(final_items)],superset=self.items)
+                C_groups[self.clusters[k]] = _pd.Index(self.items[_np.array(final_items)])
             else:
-                C_groups[self.clusters[k]] = _Group(_np.array([self.items[k]]),superset=self.items)
+                C_groups[self.clusters[k]] = _pd.Index(_np.array([self.items[k]]))
         return C_groups
     
     def at_scale(self,scale):
@@ -119,10 +119,10 @@ class Hierarchy:
         C_less_than = {k:C_tree[k] for k in C_tree.keys() if self._scales[k]<=scale}
         C_top = {k:C_less_than[k] for k in C_less_than.keys() if is_canopy(k,C_less_than)}
         C_groups = self.cluster_groups()
-        C_top_lists = {k:C_groups[self.clusters[k]].in_superset for k in C_top.keys()}
-        C_top_group = _Group(self.clusters.elements[_np.array(list(C_top_lists.keys()))],superset=self.clusters)
+        C_top_lists = {k:self.items.get_indexer(C_groups[self.clusters[k]]) for k in C_top.keys()}
+        C_top_group = _pd.Index(self.clusters.to_numpy()[_np.array(list(C_top_lists.keys()))])
         return _Aggregation(self.items,C_top_group,
-                           {C_top_group.ind[self.clusters.elements[k]]:C_top_lists[k] 
+                           {C_top_group.get_loc(self.clusters.to_numpy()[k]):C_top_lists[k] 
                             for k in C_top_lists.keys()})
 
     def join(self,cluster_list):
@@ -130,9 +130,9 @@ class Hierarchy:
         Returns the smallest cluster that is a supercluster of all given clusters.
         """
         C_groups = self.cluster_groups()
-        items = list(_reduce(lambda x,y:x+y,[C_groups[c] for c in cluster_list],_Group(_np.array([]))).elements)
+        items = list(_reduce(lambda x,y:x.union(y,sort=False),[C_groups[c] for c in cluster_list],_pd.Index(_np.array([]))).to_numpy())
         rivals = self.clusters_containing(items)
-        lens = _np.array([len(self.cluster_groups()[c]) for c in rivals.elements])
+        lens = _np.array([len(self.cluster_groups()[c]) for c in rivals])
         return rivals[_np.argmin(lens)]
 
     def clusters_containing(self,items_list):
@@ -145,7 +145,7 @@ class Hierarchy:
         for key,grp in C_groups.items():
             if _np.all(_np.array([(i in grp) for i in items_list])):
                 containing_groups.append(key)
-        return _Group(_np.array(containing_groups),superset=self.clusters)
+        return _pd.Index(_np.array(containing_groups))
 
     def measure(self,field,axis=0):
         """
@@ -160,7 +160,7 @@ class Hierarchy:
         else:
             new_field = field
         C_groups = self.cluster_groups()
-        measure = _np.stack([_np.sum(new_field[C_groups[k].in_superset],axis=0) for k in self.clusters])
+        measure = _np.stack([_np.sum(new_field[self.items.get_indexer(C_groups[k])],axis=0) for k in self.clusters])
         if axis != 0:
             new_measure = _np.moveaxis(measure,[0,axis],[axis,0])
         else:

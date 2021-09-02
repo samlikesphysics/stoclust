@@ -41,9 +41,9 @@ dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
 """
 
 import numpy as _np
+import pandas as _pd
 import plotly.graph_objects as _go
 from stoclust.Aggregation import Aggregation as _Aggregation
-from stoclust.Group import Group as _Group
 from tqdm import tqdm as _tqdm
 
 def heatmap(mat,show_x=None,show_y=None,xlabels=None,ylabels=None,layout=None,**kwargs):
@@ -125,7 +125,7 @@ def scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
     **kwargs :      Keyword arguments for the Plotly Scatter3d trace.
                     If an attribute is given as a single string or float, will be applied to all data points. 
                     If as an array of length x.shape[0], will be applied separately to each data point.
-                    If an an array of length agg.clusters.size, will be applied separately to each cluster.
+                    If an an array of length agg.clusters.__len__(), will be applied separately to each cluster.
 
 
     Output
@@ -133,29 +133,29 @@ def scatter3D(x,y,z,agg=None,layout=None,show_items=None,**kwargs):
     fig :           A Plotly Figure containing the scatter plot.
     """
     if agg is None:
-        agg = _Aggregation(_Group(_np.arange(x.shape[0])),
-                          _Group(_np.array([0])),
+        agg = _Aggregation(_pd.Index(_np.arange(x.shape[0])),
+                          _pd.Index(_np.array([0])),
                           {0:_np.arange(x.shape[0])})
-    specific_keywords = [{} for i in range(agg.clusters.size)]
+    specific_keywords = [{} for i in range(agg.clusters.__len__())]
     for k,v in kwargs.items():
         if hasattr(v, '__len__') and not(isinstance(v,str)):
             if len(v)==len(agg.clusters):
-                for i in range(agg.clusters.size):
+                for i in range(agg.clusters.__len__()):
                     specific_keywords[i][k] = v[i]
             elif len(v)==len(agg.items):
-                for i in range(agg.clusters.size):
+                for i in range(agg.clusters.__len__()):
                     specific_keywords[i][k] = v[agg._aggregations[i]]
         else:
-            for i in range(agg.clusters.size):
+            for i in range(agg.clusters.__len__()):
                 specific_keywords[i][k] = v
     if kwargs.get('name',None) is None:
-        for i in range(agg.clusters.size):
-            specific_keywords[i]['name'] = str(agg.clusters.elements[i])
+        for i in range(agg.clusters.__len__()):
+            specific_keywords[i]['name'] = str(agg.clusters[i])
     fig = _go.Figure(data=[_go.Scatter3d(x=x[agg._aggregations[i]],
                                        y=y[agg._aggregations[i]],
                                        z=z[agg._aggregations[i]],
                                        **(specific_keywords[i]))                   
-                        for i in range(agg.clusters.size)])
+                        for i in range(agg.clusters.__len__())])
     if layout is not None:
         fig.update_layout(**layout)
     return fig
@@ -181,7 +181,7 @@ def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
     **kwargs :      Keyword arguments for the Plotly Scatter trace.
                     If an attribute is given as a single string or float, will be applied to all data points. 
                     If as an array of length x.shape[0], will be applied separately to each data point.
-                    If an an array of length agg.clusters.size, will be applied separately to each cluster.
+                    If an an array of length agg.clusters.__len__(), will be applied separately to each cluster.
 
 
     Output
@@ -189,31 +189,31 @@ def scatter2D(x,y,agg=None,layout=None,show_items=None,**kwargs):
     fig :           A Plotly Figure containing the scatter plot.
     """
     if agg is None:
-        agg = _Aggregation(_Group(_np.arange(x.shape[0])),
-                          _Group(_np.array([0])),
+        agg = _Aggregation(_pd.Index(_np.arange(x.shape[0])),
+                          _pd.Index(_np.array([0])),
                           {0:_np.arange(x.shape[0])})
 
 
-    specific_keywords = [{} for i in range(agg.clusters.size)]
+    specific_keywords = [{} for i in range(agg.clusters.__len__())]
     for k,v in kwargs.items():
         if hasattr(v, '__len__') and not(isinstance(v,str)):
             if len(v)==len(agg.clusters):
-                for i in range(agg.clusters.size):
+                for i in range(agg.clusters.__len__()):
                     specific_keywords[i][k] = v[i]
             elif len(v)==len(agg.items):
-                for i in range(agg.clusters.size):
+                for i in range(agg.clusters.__len__()):
                     specific_keywords[i][k] = v[agg._aggregations[i]]
         else:
-            for i in range(agg.clusters.size):
+            for i in range(agg.clusters.__len__()):
                 specific_keywords[i][k] = v
     if kwargs.get('name',None) is None:
-        for i in range(agg.clusters.size):
-            specific_keywords[i]['name'] = str(agg.clusters.elements[i])
+        for i in range(agg.clusters.__len__()):
+            specific_keywords[i]['name'] = str(agg.clusters[i])
 
     fig = _go.Figure(data=[_go.Scatter(x=x[agg._aggregations[i]],
                                        y=y[agg._aggregations[i]],
                                        **(specific_keywords[i]))                   
-                        for i in range(agg.clusters.size)])
+                        for i in range(agg.clusters.__len__())])
     if layout is not None:
         fig.update_layout(**layout)
     return fig
@@ -303,7 +303,7 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
     -----------------
     line :          A dict for formatting Plotly shape lines.
                     If an attribute is given as a single string or float, will be applied to all lines.
-                    If as an array of length hier.clusters.size, will be applied separately to the lines immediately beneath each cluster.
+                    If as an array of length hier.clusters.__len__(), will be applied separately to the lines immediately beneath each cluster.
 
     layout :        A dictionary for updating values for the Plotly Figure layout.
 
@@ -311,7 +311,7 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
 
     **kwargs :      Keyword arguments for the Plotly Scatter trace. 
                     If an attribute is given as a single string or float, will be applied to all branch points. 
-                    If as an array of length hier.clusters.size, will be applied separately to each cluster's branch point.
+                    If as an array of length hier.clusters.__len__(), will be applied separately to each cluster's branch point.
 
     Output
     ------
@@ -319,12 +319,12 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
     """
     groups = hier.cluster_groups()
 
-    x_items = _np.zeros([hier.items.size])
+    x_items = _np.zeros([hier.items.__len__()])
     s_max = _np.max(hier._scales)
     top_agg = hier.at_scale(s_max)
     x_base = 0
     x_in_superset = []
-    for c in range(top_agg.clusters.size):
+    for c in range(top_agg.clusters.__len__()):
         grp = top_agg._aggregations[c]
         n = len(grp)
         x_items[grp] = _np.arange(n)+x_base
@@ -332,31 +332,31 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
         x_in_superset = x_in_superset + list(top_agg._aggregations[c])
     x_in_superset = _np.array(x_in_superset)
     
-    x_clusters = _np.zeros([hier.clusters.size])
-    y_clusters = _np.zeros([hier.clusters.size])
+    x_clusters = _np.zeros([hier.clusters.__len__()])
+    y_clusters = _np.zeros([hier.clusters.__len__()])
     fig = _go.Figure()
 
-    lineinfo = [{} for c in range(hier.clusters.size)]
+    lineinfo = [{} for c in range(hier.clusters.__len__())]
     if line is None:
-        for c in range(hier.clusters.size):
+        for c in range(hier.clusters.__len__()):
             lineinfo[c]=dict(
                     color="RoyalBlue",
                     width=3)
     else:
         for k,v in line.items():
             if hasattr(v, '__len__') and not(isinstance(v,str)):
-                for c in range(hier.clusters.size):
+                for c in range(hier.clusters.__len__()):
                     lineinfo[c][k] = v[c]
             else:
-                for c in range(hier.clusters.size):
+                for c in range(hier.clusters.__len__()):
                     lineinfo[c][k] = v
     if show_progress:
-        clust_iter = _tqdm(range(hier.clusters.size))
+        clust_iter = _tqdm(range(hier.clusters.__len__()))
     else:
-        clust_iter = range(hier.clusters.size)
+        clust_iter = range(hier.clusters.__len__())
     
     for c in clust_iter:
-        x_clusters[c] = _np.average(x_items[groups[hier.clusters[c]].in_superset])
+        x_clusters[c] = _np.average(x_items[hier.items.get_indexer(groups[hier.clusters[c]])])
         y_clusters[c] = hier._scales[c]
         if len(hier._children[c])>0:
             xmin = _np.min(x_clusters[hier._children[c]])
@@ -384,7 +384,7 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
                         ))
         
     if kwargs.get('customdata',None) is None:
-        customdata=hier.clusters.elements
+        customdata=hier.clusters.to_numpy()
     if kwargs.get('hovertemplate',None) is None:
         hovertemplate = '<b>ID</b>: %{customdata} <br><b>Scale</b>: %{y} '
     fig.add_trace(_go.Scatter(x=x_clusters,y=y_clusters,
@@ -398,8 +398,8 @@ def dendrogram(hier,line=None,layout=None,show_progress=False,**kwargs):
             yaxis_title=kwargs.get('y_axis_label','Scale'),
             xaxis = dict(
                 tickmode = 'array',
-                tickvals = _np.arange(hier.items.size),
-                ticktext = hier.items.elements[x_in_superset]
+                tickvals = _np.arange(hier.items.__len__()),
+                ticktext = hier.items[x_in_superset]
             ))
     fig.update_shapes(layer='below')
     fig.update_xaxes(showgrid=False,zeroline=False)

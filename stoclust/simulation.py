@@ -7,7 +7,7 @@ Markovian walks.
 
 Functions
 ---------
-markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,max_time=100,tol=1e-6):
+markov_random_walk(probs,initial=None,index=None,regulator=None,halt=None,max_time=100,tol=1e-6):
 
     Given a set of transition probabilities, generates a random walk
     through the available nodes. This walk may be regulated by
@@ -18,9 +18,9 @@ markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,max_ti
 
 import numpy as _np
 from stoclust import regulators as _regulators
-from stoclust.Group import Group as _Group
+import pandas as _pd
 
-def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,max_time=100,tol=1e-6):
+def markov_random_walk(probs,initial=None,index=None,regulator=None,halt=None,max_time=100,tol=1e-6):
     """
     Given a set of transition probabilities, generates a random walk
     through the available nodes. The initial node, if not specified,
@@ -54,13 +54,13 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,ma
     probs :         A square Markov matrix indicating the 
                     transition probabilities for the walk.
 
-    initial :       The initial node. If group is not None, 
+    initial :       The initial node. If index is not None, 
                     then the type of initial should be the 
-                    type of the elements of group. Otherwise, 
+                    type of the elements of index. Otherwise, 
                     initial should be the index of the initial node. 
                     If not specified, a random node will be chosen.
 
-    group :         A Group whose elements label the indices of probs. 
+    index :         A Group whose elements label the indices of probs. 
                     If specified, inputs like initial and outputs 
                     like the path refer to nodes by their labels. 
                     If not specified, nodes will be referred to 
@@ -85,8 +85,8 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,ma
                     is halted automatically after max_time steps. 
                     The default is set to 100.
     """
-    if group is None:
-        group = _Group(_np.arange(probs.shape[0]))
+    if index is None:
+        index = _pd.Index(_np.arange(probs.shape[0]))
 
     if regulator is None:
         regulator = lambda t,ps,an,nd: (False,None,ps)
@@ -97,7 +97,7 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,ma
     if initial is None:
         initial_ind = _np.random.choice(_np.arange(probs.shape[0]))
     else:
-        initial_ind = group.ind[initial]
+        initial_ind = index.get_loc(initial)
     
     reports = []
     locations = []
@@ -123,7 +123,7 @@ def markov_random_walk(probs,initial=None,group=None,regulator=None,halt=None,ma
             reports.append([report,t])
 
         current = sequel
-        locations.append(group.elements[current])
+        locations.append(index.to_numpy()[current])
         t += 1
     
     return _np.array(reports), _np.array(locations)

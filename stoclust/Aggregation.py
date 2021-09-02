@@ -1,13 +1,14 @@
 import numpy as _np
 from functools import reduce as _reduce
 from stoclust.Group import Group as _Group
+import pandas as _pd
 
 class Aggregation:
     """
-    A class for describing partitions of Groups into clusters.
+    A class for describing partitions of Indices into clusters.
 
     Aggregations are defined by three primary attributes:
-    their Group of items, their Group of cluster labels,
+    their Index of items, their Index of cluster labels,
     and a dictionary whose keys are cluster indices and whose
     values are arrays of item indices, indicating which cluster
     contains which items.
@@ -15,7 +16,7 @@ class Aggregation:
     Attributes that can be obtained are self.items and self.clusters.
     Aggregations act like dictionaries in that the cluster labels
     may be called as indices. That is, for an aggregation A, and cluster c,
-    A[c] results in a Group containing the items in cluster c.
+    A[c] results in an Index containing the items in cluster c.
     When treated as an iterator, A returns tuples of the form (c,A[c]),
     much like the dictionary items() iterator.
     The length of an Aggregation, len(A), is the number of clusters.
@@ -32,9 +33,9 @@ class Aggregation:
     as_dict:        Returns a dictionary whose keys are from self.clusters
                     and whose values are Groups corresponding to said clusters.
     """
-    def __init__(self,item_group,cluster_group,agg_dict):
-        self.items = item_group
-        self.clusters = cluster_group
+    def __init__(self,item_idx,cluster_idx,agg_dict):
+        self.items = item_idx
+        self.clusters = cluster_idx
         self._aggregations = agg_dict
 
     def __iter__(self):
@@ -52,7 +53,7 @@ class Aggregation:
         ) + ')'
         return string
     def __getitem__(self,key):
-        return _Group(self.items.elements[self._aggregations[self.clusters.ind[key]]],superset=self.items)
+        return _pd.Index(self.items[self._aggregations[self.clusters.get_loc(key)]],)
 
     def __len__(self):
         return self.clusters.size
@@ -83,5 +84,5 @@ class Aggregation:
         Returns a dictionary whose keys are from self.clusters
         and whose values are Groups corresponding to said clusters.
         """
-        return {self.clusters[k]:_Group(self.items.elements[self._aggregations[k]],superset=self.items)
+        return {self.clusters[k]:_pd.Index(self.items[self._aggregations[k]])
                 for k in self._aggregations.keys()}

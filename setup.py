@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='stoclust',
-    version='0.1.0',
+    version='0.1.5',
     author='Samuel Loomis',
     author_email='sloomis@ucdavis.edu',
     packages=['stoclust'],
