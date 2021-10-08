@@ -37,7 +37,13 @@ for documentation, examples and further info!
 
 # Installation
 
-To download the package, you can either download the 
+To install from `pip`, run
+
+```
+>>> pip install stoclust
+```
+
+To build from source, you can either download the 
 [zip](https://github.com/samlikesphysics/stoclust/archive/main.zip) 
 or [tarball](https://github.com/samlikesphysics/stoclust/tarball/main) directly, 
 or clone the GitHub repository via
@@ -46,7 +52,7 @@ or clone the GitHub repository via
 >>> git clone https://github.com/samlikesphysics/stoclust.git
 ```
 
-The present installation consists of two console steps, run in the the same folder as `setup.py`:
+Then run in the the same folder as `setup.py`:
 
 ```
 >>> python setup.py build
