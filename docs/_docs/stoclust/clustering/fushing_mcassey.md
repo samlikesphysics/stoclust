@@ -2,7 +2,7 @@
 layout: docs
 title: fushing_mcassey
 parent: clustering
-def: 'fushing_mcassey(st_mat, max_visits=5, time_quantile_cutoff=0.95, group=None)'
+def: 'fushing_mcassey(st_mat, max_visits=5, time_quantile_cutoff=0.95, index=None)'
 excerpt: 'Given a stochastic matrix describing the strength of the relationship between pairs of items, determines an aggregation of the items using the regulated random walk approach of Fushing and McAssey.'
 permalink: /docs/clustering/fushing_mcassey/
 ---
@@ -44,7 +44,7 @@ a cluster together over the many runs.
 | `st_mat` | | `np.ndarray` | A square stochastic matrix describing a Markov dynamic. |
 | `max_visits` | Keyword | `int` | The maximum number of visits to a node before it is removed in the regulated random walk. |
 | `time_quantile_cutoff` | Keyword | `float` | The quantile of the length of time between node removals, which is used to determine the number of clusters. |
-| `group` | Keyword | `Group` | The group which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
+| `index` | Keyword | `Index` | The `Index` which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
 
 ## Example
 
@@ -54,6 +54,7 @@ First we will generate a sample dataset with two concentric rings:
 import stoclust.visualization as viz
 import stoclust as sc
 import numpy as np
+import pandas as pd
 
 n1 = 200
 n2 = 50
@@ -70,8 +71,8 @@ samples = np.concatenate([
 ])
 
 agg = sc.Aggregation(
-    sc.Group(np.arange(n1+n2)),
-    sc.Group(['Outer','Inner']),
+    pd.Index(np.arange(n1+n2)),
+    pd.Index(['Outer','Inner']),
     {
         0:np.arange(0,n1),
         1:np.arange(n1,n1+n2)

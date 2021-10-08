@@ -2,7 +2,7 @@
 layout: docs
 title: split_by_vals
 parent: clustering
-def: 'split_by_vals(vec, cuts=0, group = None, tol=0)'
+def: 'split_by_vals(vec, cuts=0, index = None, tol=0)'
 excerpt: 'Aggregates the indices of a vector based on specified values at which to cut the sorted array. Assumes the right-continuity of the cumulative distribution function.'
 permalink: /docs/clustering/split_by_vals/
 ---
@@ -39,7 +39,7 @@ can pass `-vec` as the argument instead.
 | --- | --- | --- | --- |
 | `vec` | | `np.ndarray` | A one-dimensional array of values.|
 | `cuts` | Keyword | `float`, `list` or `np.ndarray` | Values which will be used to divide the vector components.|
-| `group` | Keyword | `Group` | The group which labels the indices of `vec`, and which will be the item set of the returned `Aggregation`. |
+| `index` | Keyword | `Index` | The index which labels the indices of `vec`, and which will be the item set of the returned `Aggregation`. |
 
 ## Examples
 First we provide a direct example which shows the
@@ -63,11 +63,11 @@ agg
 <code>[0.&nbsp;&nbsp;0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9]</code><br>
 `Aggregation(`<br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Group([1,2,3,4,5])</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Index([1,2,3,4,5])</code><br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Group([0])</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Index([0])</code><br>
 <code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2:
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Group([6,7,8,9])</code><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Index([6,7,8,9])</code><br>
 `)`<br>
 
 Note that, as $$-0.1$$ and $$1.0$$ are outside of the range of the vector's values,

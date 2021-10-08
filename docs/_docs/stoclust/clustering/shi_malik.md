@@ -2,7 +2,7 @@
 layout: docs
 title: shi_malik
 parent: clustering
-def: 'shi_malik(st_mat, eig_thresh=0.95, tol=0, group=None)'
+def: 'shi_malik(st_mat, eig_thresh=0.95, tol=0, index=None)'
 excerpt: 'Given a square column-stochastic matrix describing the strength of the relationship between pairs of items, determines an aggregation of the items using the spectral approach of Shi and Malik.'
 permalink: /docs/clustering/shi_malik/
 ---
@@ -57,7 +57,7 @@ is returned as an `Aggregation`.
 | `st_mat` | | `np.ndarray` | A square column-stochastic matrix describing a Markov dynamic.|
 | `eig_thresh` | Keyword | `float` | The smallest value the subleading eigenvalue may have to continue the recursion. |
 | `cut` | Keyword | `float` | The value used to "cut" the subleading eigenvector into two clusters. |
-| `group` | Keyword | `Group` | The group which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
+| `index` | Keyword | `Index` | The `Index` which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
 
 ## Example
 
@@ -68,6 +68,7 @@ with two touching circles:
 import stoclust.visualization as viz
 import stoclust as sc
 import numpy as np
+import pandas as pd
 
 n = 500
 
@@ -78,8 +79,8 @@ samples = np.concatenate([
 ])
 
 agg = sc.Aggregation(
-    sc.Group(np.arange(samples.shape[0])),
-    sc.Group(['Left','Right']),
+    pd.Index(np.arange(samples.shape[0])),
+    pd.Index(['Left','Right']),
     {
         0:np.arange(0,n),
         1:np.arange(n,2*n)

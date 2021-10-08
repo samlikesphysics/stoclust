@@ -2,7 +2,7 @@
 layout: docs
 title: split_by_quantiles
 parent: clustering
-def: 'split_by_quantiles(vec, quantiles=0.95, group = None)'
+def: 'split_by_quantiles(vec, quantiles=0.95, index = None)'
 excerpt: 'Cuts the vector at specific quantiles rather than rigid values. Assumes right-continuity of the cumulative distribution function.'
 permalink: /docs/clustering/split_by_quantiles/
 ---
@@ -54,7 +54,7 @@ can pass `-vec` as the argument instead.
 | --- | --- | --- | --- |
 | `vec` | | `np.ndarray` | A one-dimensional array of values.|
 | `quantiles` | Keyword | `float`, `list` or `np.ndarray` | Quantiles which will be used to divide the vector components.|
-| `group` | Keyword | `Group` | The group which labels the indices of `vec`, and which will be the item set of the returned `Aggregation`. |
+| `index` | Keyword | `Index` | The `Index` which labels the indices of `vec`, and which will be the item set of the returned `Aggregation`. |
 
 ## Examples
 
@@ -71,9 +71,9 @@ clust.split_by_quantiles(vec,quantiles=[0.0,0.5,0.9])
 {% endhighlight %}
 
 <code>Aggregation(</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Group([2, 3, 4, 5])</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Group([0, 1])</code><br>
-<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Group([6, 7, 8, 9])</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;1:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Index([2, 3, 4, 5])</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Index([0, 1])</code><br>
+<code>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Index([6, 7, 8, 9])</code><br>
 <code>)</code><br>
 
 Note first that the $$0.5$$ quantile divides the vector into components

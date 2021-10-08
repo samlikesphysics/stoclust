@@ -2,7 +2,7 @@
 layout: docs
 title: meyer_wessell
 parent: clustering
-def: 'meyer_wessell(st_mat, min_times_same = 5, vector_clustering = None, group = None)'
+def: 'meyer_wessell(st_mat, min_times_same = 5, vector_clustering = None, index = None)'
 excerpt: 'Given a square column-stochastic matrix describing the strength of the relationship between pairs of items, determines an aggregation of the items using the dynamical approach of Meyer and Wessell..'
 permalink: /docs/clustering/meyer_wessell/
 ---
@@ -47,7 +47,7 @@ enough number of iterations, it is returned as the final Aggregation.
 | `st_mat` | | `np.ndarray` | A square column-stochastic matrix describing a Markov dynamic.|
 | `min_times_same` | Keyword | `int` | The number of iterations after which, if the clustering has not changed, the algorithm halts. |
 | `vector_clustering` | Keyword | `function` | The particular method of vector clustering which should be used in the algorithm. Should receive a vector as the sole input and return an Aggregation. |
-| `group` | Keyword | `Group` | The group which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
+| `index` | Keyword | `Index` | The `Index` which labels the indices of `st_mat`, and which will be the item set of the returned `Aggregation`. |
 
 ## Example
 
@@ -58,6 +58,7 @@ with two touching circles:
 import stoclust.visualization as viz
 import stoclust as sc
 import numpy as np
+import pandas as pd
 
 n = 500
 
@@ -68,8 +69,8 @@ samples = np.concatenate([
 ])
 
 agg = sc.Aggregation(
-    sc.Group(np.arange(samples.shape[0])),
-    sc.Group(['Left','Right']),
+    pd.Index(np.arange(samples.shape[0])),
+    pd.Inex(['Left','Right']),
     {
         0:np.arange(0,n),
         1:np.arange(n,2*n)
