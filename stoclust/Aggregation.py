@@ -31,7 +31,7 @@ class Aggregation:
                     such that B[j] is the cluster containing self.items[j].
                     
     as_dict:        Returns a dictionary whose keys are from self.clusters
-                    and whose values are Groups corresponding to said clusters.
+                    and whose values are Indexes corresponding to said clusters.
     """
     def __init__(self,item_idx,cluster_idx,agg_dict):
         self.items = item_idx
