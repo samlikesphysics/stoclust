@@ -18,9 +18,10 @@ probe the stability and robustness of clustering results.
 
 The core of our package is currently:
 
-1. The three classes `Group`, `Aggregation` and `Hierarchy`, which respectively
-formalize the notion of a set of items, a single clustering or partition of a set, and a
-hierarchical clustering of a set, each in a manner that is amicable to `numpy` indexing
+1. The two classes `Aggregation` and `Hierarchy`, which respectively
+formalize a single clustering or partition of a set, and a
+   hierarchical clustering of a set, each in a manner that is amicable to
+   `numpy` and `pandas` indexing,
 and allows cross-referencing between subsets and supersets;
 
 2. The `ensemble` module, which can be used to generate noisy ensembles from a base
