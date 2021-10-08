@@ -11,9 +11,10 @@ probe the stability and robustness of clustering results.
 
 The core of our package is currently:
 
-1. The three classes `Group`, `Aggregation` and `Hierarchy`, which respectively
-formalize the notion of a set of items, a single clustering or partition of a set, and a
-hierarchical clustering of a set, each in a manner that is amicable to `numpy` indexing
+1. The two classes `Aggregation` and `Hierarchy`, which respectively
+formalize a single clustering or partition of a set, and a
+   hierarchical clustering of a set, each in a manner that is amicable to
+   `numpy` and `pandas` indexing,
 and allows cross-referencing between subsets and supersets;
 
 2. The `ensemble` module, which can be used to generate noisy ensembles from a base
@@ -36,4 +37,29 @@ for documentation, examples and further info!
 
 # Installation
 
+To download the package, you can either download the 
+[zip](https://github.com/samlikesphysics/stoclust/archive/main.zip) 
+or [tarball](https://github.com/samlikesphysics/stoclust/tarball/main) directly, 
+or clone the GitHub repository via
+
+```
+>>> git clone https://github.com/samlikesphysics/stoclust.git
+```
+
+The present installation consists of two console steps, run in the the same folder as `setup.py`:
+
+```
+>>> python setup.py build
+>>> python -m pip install .
+```
+
 # Dependencies
+
+`stoclust` depends on the following packages:
+
+| Package | Recommended version |
+| ------- | ------------------- |
+| `numpy` | 1.15.0              |
+| `scipy` | 1.1.0               |
+| `plotly`| 4.12.0              |
+| `tqdm`  | 4.41.1              |
